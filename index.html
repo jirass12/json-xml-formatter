@@ -1,28 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON XML Formatter</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        #con { display: flex; gap: 20px; }
-        #rad {display: flex; flex-direction: column; justify-content: center; gap: 20px;}
-        textarea { width: 100%; height: 100px; flex: 7; }
-        button { width: 100%; padding: 10px 20px; font-size: 16px; flex: 1; }
-        #output { margin-top: 20px; background-color: #f8f8f8; padding: 10px; border: 1px solid #ddd; }
-        code { white-space: pre-wrap; display: block; padding: 10px; }
-        .string { color: green; } .number { color: blue; } .boolean { color: purple; } .null { color: red; } .key { color: brown; }
-        .xml-tag { color: brown; } .xml-attribute { color: red; } .xml-value { color: blue; } .xml-text { color: green; }
-        #scrollTopBtn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99; font-size: 18px; border: none; outline: none; background-color: #555; color: white; cursor: pointer; padding: 15px; border-radius: 4px; width:50px }
-        #scrollTopBtn:hover { background-color: #333; }
-        .collapsible { cursor: pointer; }
-        .collapsible::before { content: '▶'; padding-right: 5px; }
-        .active::before { content: '▼'; }
-        .content { display: inline;}
-        .content.collapsed { display: none; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #con {
+            display: flex;
+            gap: 20px;
+        }
+
+        #rad {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            flex: 7;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px 20px;
+            font-size: 16px;
+            flex: 1;
+        }
+
+        #output {
+            margin-top: 20px;
+            background-color: #f8f8f8;
+            padding: 10px;
+            border: 1px solid #ddd;
+            word-break: break-word;
+        }
+
+        code {
+            white-space: pre-wrap;
+            display: inline;
+        }
+
+        .string {
+            color: green;
+        }
+
+        .number {
+            color: blue;
+        }
+
+        .boolean {
+            color: purple;
+        }
+
+        .null {
+            color: red;
+        }
+
+        .key {
+            color: brown;
+        }
+
+        .xml-tag {
+            color: brown;
+        }
+
+        .xml-attribute {
+            color: red;
+        }
+
+        .xml-value {
+            color: blue;
+        }
+
+        .xml-text {
+            color: green;
+        }
+
+        #scrollTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99;
+            font-size: 18px;
+            border: none;
+            outline: none;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            border-radius: 4px;
+            width: 50px
+        }
+
+        #menu1, #menu2 {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            z-index: 99;
+            font-size: 18px;
+            border: none;
+            outline: none;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            border-radius: 4px;
+            transform: translateX(50%);
+            width: 50px
+        }
+        #menu1{
+            right: 48%;
+        }
+        #menu2{
+            right: 52%;
+        }
+        #scrollTopBtn:hover {
+            background-color: #333;
+        }
+
+        .collapsible {
+            cursor: pointer;
+        }
+
+        .collapsible::before {
+            content: '▶';
+            padding-right: 5px;
+        }
+
+        .active::before {
+            content: '▼';
+        }
+
+        .content {
+            display: inline;
+            color: black;
+        }
+
+        .content.collapsed {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
     <div id="con">
         <textarea id="textInput"></textarea>
@@ -39,6 +168,8 @@
     </div>
     <div id="output"></div>
     <button onclick="scrollToTop()" id="scrollTopBtn" title="Go to top">↑</button>
+    <button onclick="expandAll()" id="menu1" title="Expand all">💬</button>
+    <button onclick="collapseAll()" id="menu2" title="Collapse all">🗨</button>
     <script>
         function formatText() {
             const input = document.getElementById('textInput').value.trim();
@@ -48,24 +179,37 @@
             } else if (selected.value == "xml") {
                 formatXML(input);
             }
+            if(input){
+                document.getElementById('menu1').style.display = "block";
+                document.getElementById('menu2').style.display = "block";
+            }else{
+                document.getElementById('menu1').style.display = "none";
+                document.getElementById('menu2').style.display = "none";
+            }
         }
 
         function formatJSON(input) {
             let formattedText = '', indentLevel = 0, indent = '    ';
-            for (let char of input) {
+            for (let i = 0; i < input.length; i++) {
+                let char = input[i];
                 if (char === '{' || char === '[') {
                     formattedText += char + '\n' + indent.repeat(Math.max(0, ++indentLevel));
                 } else if (char === '}' || char === ']') {
                     formattedText += '\n' + indent.repeat(Math.max(0, --indentLevel)) + char;
                 } else if (char === ',') {
                     formattedText += char + '\n' + indent.repeat(Math.max(0, indentLevel));
+                } else if (i-2 >= 0 && input[i-1] == " " && input[i-2] =="}" || input[i-1] == " " && input[i-2] == "]") {
+                    formattedText += "\n" + char;
                 } else if (char !== '\n' && char !== '\r') {
                     formattedText += char;
+                } else {
+                    formattedText += "\n";
                 }
             }
             document.getElementById('output').innerHTML = syntaxHighlightJSON(formattedText);
             addCollapsibleListeners();
         }
+
 
         function formatXML(input) {
             let formattedText = '', indentLevel = 0, indent = '    ';
@@ -75,10 +219,13 @@
                 if (node.match(/^<?\w[^>]*[^\/]$/)) indentLevel++;
             });
             formattedText = formattedText.substring(1, formattedText.length - 2);
-            document.getElementById('output').innerHTML = '<code>' + syntaxHighlightXML(formattedText) + '</code>';
+            document.getElementById('output').innerHTML = syntaxHighlightXML(formattedText);
+            addCollapsibleListeners();
         }
 
         function syntaxHighlightJSON(json) {
+            let openBrackets = 0;
+            const unmatchedBrackets = [];
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
                 let cls = 'number';
@@ -88,29 +235,59 @@
                 return `<span class="${cls}">${match}</span>`;
             });
 
-            // Add collapsible functionality
             json = json.replace(/(\{|\[|\}|\])/g, match => {
                 if (match === '{' || match === '[') {
+                    openBrackets++;
+                    unmatchedBrackets.push(match);
                     return `<span class="collapsible active">${match}</span><div class="content">`;
-                } else if (match === '}' || match === ']') {
+                } else if ((match === '}' || match === ']') && openBrackets > 0) {
+                    openBrackets--;
+                    unmatchedBrackets.pop();
                     return `</div><span>${match}</span>`;
                 } else {
                     return match;
                 }
             });
 
+            unmatchedBrackets.forEach(unmatched => {
+                json = json.replace(`<span class="collapsible active">${unmatched}</span><div class="content">`, unmatched);
+            });
+
             return '<code>' + json + '</code>';
         }
 
         function syntaxHighlightXML(xml) {
+            let openTags = 0;
+            const unmatchedTags = [];
             xml = xml.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return xml.replace(/(&lt;\/?[^&]+?&gt;|&quot;[^&]+?&quot;|&lt;[^&]+?&gt;)/g, match => {
+            xml = xml.replace(/(&lt;\/?[^&]+?&gt;|&quot;[^&]+?&quot;|&lt;[^&]+&gt;)/g, match => {
                 let cls = 'xml-tag';
                 if (/^&lt;\/[^&]+&gt;$/.test(match)) cls = 'xml-tag';
                 else if (/^&lt;[^&]+&gt;$/.test(match)) cls = 'xml-tag';
                 else if (/&quot;[^&]+&quot;/.test(match)) cls = 'xml-value';
                 return `<span class="${cls}">${match}</span>`;
             });
+
+            xml = xml.replace(/(&lt;[^\/&][^&]*&gt;)/g, match => {
+                openTags++;
+                unmatchedTags.push(match);
+                return `<span class="collapsible active">${match}</span><div class="content">`;
+            });
+            xml = xml.replace(/(&lt;\/[^&]+&gt;)/g, match => {
+                if (openTags > 0) {
+                    openTags--;
+                    unmatchedTags.pop();
+                    return `</div><span>${match}</span>`;
+                } else {
+                    return match;
+                }
+            });
+
+            unmatchedTags.forEach(unmatched => {
+                xml = xml.replace(`<span class="collapsible active">${unmatched}</span><div class="content">`, unmatched);
+            });
+
+            return '<code>' + xml + '</code>';
         }
 
         function addCollapsibleListeners() {
@@ -131,6 +308,24 @@
         function clearText() {
             document.getElementById('textInput').value = '';
             document.getElementById('output').innerHTML = '';
+            document.getElementById('menu1').style.display = "none";
+            document.getElementById('menu2').style.display = "none";
+        }
+
+        function collapseAll(){
+            const coll = document.getElementsByClassName("collapsible");
+            for (const c of coll) {
+                c.classList.remove("active")
+                c.nextElementSibling.style.display = "none"
+            }
+        }
+
+        function expandAll(){
+            const coll = document.getElementsByClassName("collapsible");
+            for (const c of coll) {
+                c.classList.add("active")
+                c.nextElementSibling.style.display = "inline"
+            }
         }
 
         window.onscroll = function () { scrollFunction(); };
@@ -149,4 +344,5 @@
         }
     </script>
 </body>
+
 </html>
