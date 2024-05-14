@@ -54,7 +54,7 @@
         }
 
         .number {
-            color: blue;
+            color: #3838ff;
         }
 
         .boolean {
@@ -78,7 +78,7 @@
         }
 
         .xml-value {
-            color: blue;
+            color: #3838ff;
         }
 
         .xml-text {
@@ -202,8 +202,6 @@
                     formattedText += "\n" + char;
                 } else if (char !== '\n' && char !== '\r') {
                     formattedText += char;
-                } else {
-                    formattedText += "\n";
                 }
             }
             document.getElementById('output').innerHTML = syntaxHighlightJSON(formattedText);
