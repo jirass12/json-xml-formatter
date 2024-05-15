@@ -270,26 +270,32 @@
         }
 
         function formatJSON(input) {
-            let formattedText = '', indentLevel = 0, indent = '  ', last = false;
+            let formattedText = '', indentLevel = 0, indent = '  ', last = false, lastChar = "";
             for (let i = 0; i < input.length; i++) {
                 let char = input[i];
-                if (last && char == " ") {
+                if (last && (char == " " || char == "" || char == "\n" || char == "\r")) {
                     continue;
                 } else {
                     last = false
                 }
                 if (char === '{' || char === '[') {
+                    last = true
                     formattedText += char + '\n' + indent.repeat(Math.max(0, ++indentLevel));
+                    lastChar = char.trim()
                 } else if (char === '}' || char === ']') {
                     formattedText += '\n' + indent.repeat(Math.max(0, --indentLevel)) + char;
                     last = true
-                    if (input[i + 1] && input[i + 1] != ',' && input[i + 1] != '}' && input[i + 1] != ']') {
+                    if (input[i + 1] && input[i + 1] != ',' && input[i + 1] != '}' && input[i + 1] != ']' && lastChar.trim() != "" && lastChar.trim() != "}" && lastChar.trim() != "]") {
                         formattedText += '\n'
                     }
+                    lastChar = char.trim()
                 } else if (char === ',') {
+                    last = true
                     formattedText += char + '\n' + indent.repeat(Math.max(0, indentLevel));
+                    lastChar = char.trim()
                 } else if (char !== '\n' && char !== '\r') {
                     formattedText += char;
+                    lastChar = char.trim()
                 }
             }
             document.getElementById('output').innerHTML = syntaxHighlightJSON(formattedText);
