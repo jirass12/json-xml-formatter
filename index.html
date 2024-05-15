@@ -231,6 +231,7 @@
     <button onclick="copyToClipboard()" id="menu2" title="Copy">📋</button>
     <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button>
     <script>
+        let finalOutput = ""
         function space() {
             const input = document.getElementById('textInput').value.trim();
             let isInString = false;
@@ -267,6 +268,7 @@
                 document.getElementById('menu2').style.display = "none";
                 document.getElementById('menu3').style.display = "none";
             }
+            finalOutput = document.getElementById('output').innerText;
         }
 
         function formatJSON(input) {
@@ -437,8 +439,7 @@
         }
 
         function copyToClipboard() {
-            const textToCopy = document.getElementById('output').innerText;
-            navigator.clipboard.writeText(textToCopy);
+            navigator.clipboard.writeText(finalOutput);
             const al = document.getElementById('alert');
             al.style.display = "block"
             setTimeout(() => {
