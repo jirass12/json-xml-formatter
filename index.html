@@ -102,7 +102,8 @@
             width: 50px
         }
 
-        #menu1, #menu2 {
+        #menu1,
+        #menu2 {
             display: none;
             position: fixed;
             bottom: 20px;
@@ -118,12 +119,15 @@
             transform: translateX(50%);
             width: 50px
         }
-        #menu1{
+
+        #menu1 {
             right: 48%;
         }
-        #menu2{
+
+        #menu2 {
             right: 52%;
         }
+
         #scrollTopBtn:hover {
             background-color: #333;
         }
@@ -164,6 +168,7 @@
             </span>
         </div>
         <button onclick="formatText()">Format</button>
+        <button onclick="space()">Remove space</button>
         <button onclick="clearText()">Clear</button>
     </div>
     <div id="output"></div>
@@ -171,6 +176,25 @@
     <button onclick="expandAll()" id="menu1" title="Expand all">💬</button>
     <button onclick="collapseAll()" id="menu2" title="Collapse all">🗨</button>
     <script>
+        function space() {
+            const input = document.getElementById('textInput').value.trim();
+            let isInString = false;
+            let result = '';
+
+            for (let i = 0; i < input.length; i++) {
+                let char = input[i];
+
+                if (char === '"' && (i === 0 || input[i - 1] !== '\\')) {
+                    isInString = !isInString;
+                }
+
+                if (isInString || (!isInString && !/\s/.test(char))) {
+                    result += char;
+                }
+            }
+            document.getElementById('textInput').value = result
+        }
+
         function formatText() {
             const input = document.getElementById('textInput').value.trim();
             const selected = document.querySelector('input[name="lang"]:checked');
@@ -179,27 +203,34 @@
             } else if (selected.value == "xml") {
                 formatXML(input);
             }
-            if(input){
+            if (input) {
                 document.getElementById('menu1').style.display = "block";
                 document.getElementById('menu2').style.display = "block";
-            }else{
+            } else {
                 document.getElementById('menu1').style.display = "none";
                 document.getElementById('menu2').style.display = "none";
             }
         }
 
         function formatJSON(input) {
-            let formattedText = '', indentLevel = 0, indent = '    ';
+            let formattedText = '', indentLevel = 0, indent = '  ', last = false;
             for (let i = 0; i < input.length; i++) {
                 let char = input[i];
+                if (last && char == " ") {
+                    continue;
+                } else {
+                    last = false
+                }
                 if (char === '{' || char === '[') {
                     formattedText += char + '\n' + indent.repeat(Math.max(0, ++indentLevel));
                 } else if (char === '}' || char === ']') {
                     formattedText += '\n' + indent.repeat(Math.max(0, --indentLevel)) + char;
+                    last = true
+                    if (input[i + 1] && input[i + 1] != ',' && input[i + 1] != '}' && input[i + 1] != ']') {
+                        formattedText += '\n'
+                    }
                 } else if (char === ',') {
                     formattedText += char + '\n' + indent.repeat(Math.max(0, indentLevel));
-                } else if (i-2 >= 0 && input[i-1] == " " && input[i-2] =="}" || input[i-1] == " " && input[i-2] == "]") {
-                    formattedText += "\n" + char;
                 } else if (char !== '\n' && char !== '\r') {
                     formattedText += char;
                 }
@@ -310,7 +341,7 @@
             document.getElementById('menu2').style.display = "none";
         }
 
-        function collapseAll(){
+        function collapseAll() {
             const coll = document.getElementsByClassName("collapsible");
             for (const c of coll) {
                 c.classList.remove("active")
@@ -318,7 +349,7 @@
             }
         }
 
-        function expandAll(){
+        function expandAll() {
             const coll = document.getElementsByClassName("collapsible");
             for (const c of coll) {
                 c.classList.add("active")
