@@ -192,9 +192,16 @@
         }
 
         .content.collapsed {
-            display: none;
+            /* display: none; */
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
         }
-
+        .active-sib{
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
         #alert {
             display: none;
             position: fixed;
@@ -221,7 +228,7 @@
                 <input type="radio" name="lang" value="xml">XML
             </span>
         </div>
-        <button onclick="formatText()">Format</button>
+        <!-- <button onclick="formatText()">Format</button> -->
         <button onclick="space()">Remove space</button>
         <button onclick="clearText()">Clear</button>
     </div>
@@ -232,6 +239,13 @@
     <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button>
     <script>
         let finalOutput = ""
+        const ta = document.getElementById('textInput')
+        ta.addEventListener('input', formatText)
+        const rad = document.querySelectorAll('input[name="lang"]');
+        rad.forEach(radio => {
+            radio.addEventListener('change', formatText);
+        });
+
         function space() {
             const input = document.getElementById('textInput').value.trim();
             let isInString = false;
@@ -249,6 +263,7 @@
                 }
             }
             document.getElementById('textInput').value = result
+            formatText()
         }
 
         function formatText() {
@@ -390,11 +405,8 @@
                 coll[i].addEventListener("click", function () {
                     this.classList.toggle("active");
                     const content = this.nextElementSibling;
-                    if (content.style.display === "none") {
-                        content.style.display = "inline";
-                    } else {
-                        content.style.display = "none";
-                    }
+                    
+                    content.classList.toggle("active-sib");
                 });
             }
         }
@@ -411,7 +423,7 @@
             const coll = document.getElementsByClassName("collapsible");
             for (const c of coll) {
                 c.classList.remove("active")
-                c.nextElementSibling.style.display = "none"
+                c.nextElementSibling.classList.add("active-sib");
             }
         }
 
@@ -419,7 +431,7 @@
             const coll = document.getElementsByClassName("collapsible");
             for (const c of coll) {
                 c.classList.add("active")
-                c.nextElementSibling.style.display = "inline"
+                c.nextElementSibling.classList.remove("active-sib");
             }
         }
 
