@@ -4,7 +4,6 @@ let out = document.getElementById("output")
 let menu1 = document.getElementById("menu1")
 let menu2 = document.getElementById("menu2")
 let menu3 = document.getElementById("menu3")
-let selected = document.querySelector('input[name="lang"]:checked');
 let scrollTopBtn = document.getElementById("scrollTopBtn");
 let al = document.getElementById("alert");
 
@@ -48,6 +47,7 @@ function space() {
 
 function formatText() {
     const input = ta.value.trim();
+    let selected = document.querySelector('input[name="lang"]:checked');
     if (selected.value == "json") {
         formatJSON(input);
     } else if (selected.value == "xml") {
