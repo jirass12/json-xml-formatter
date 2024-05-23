@@ -103,38 +103,56 @@ function formatText() {
 //   addCollapsibleListeners();
 // }
 
-function formatJSON(input) {
+function formatJSON(text) {
     let formattedText = "";
     let indentLevel = 0;
     const indent = "  ";
     let last = false;
-    let lastChar = "";
+    let lastChar = false;
+    let inString = false
 
-    for (let i = 0; i < input.length; i++) {
-        const char = input[i];
-        if (last && /\s/.test(char)) {
-            continue;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (last && /\s/.test(char)) {
+        continue;
+      }
+      if(inString && !(/\s/.test(char))) {
+        if(char == `"`) inString = false
+        formattedText += char;
+        continue
+      }
+      last = false;
+      if(char === `"`) inString = true
+      if (char === "{" || char === "[") {
+        if(lastChar){
+          formattedText += "\n";
+          lastChar = false
         }
-        last = false;
-        if (char === "{" || char === "[") {
-            last = true;
-            formattedText += `${char}\n${indent.repeat(Math.max(0, ++indentLevel))}`;
-            lastChar = char.trim();
-        } else if (char === "}" || char === "]") {
-            formattedText += `\n${indent.repeat(Math.max(0, --indentLevel))}${char}`;
-            last = true;
-            if (!/[,\]}]/.test(input[i + 1]) && !/[}\]]/.test(lastChar)) {
-                formattedText += "\n";
-            }
-            lastChar = char.trim();
-        } else if (char === ",") {
-            last = true;
-            formattedText += `${char}\n${indent.repeat(Math.max(0, indentLevel))}`;
-            lastChar = char.trim();
-        } else if (!/[\n\r]/.test(char)) {
-            formattedText += char;
-            lastChar = char.trim();
+        last = true;
+        formattedText += `${char}\n${indent.repeat(
+          Math.max(0, ++indentLevel)
+        )}`;
+      } else if (char === "}" || char === "]") {
+        formattedText += `\n${indent.repeat(
+          Math.max(0, --indentLevel)
+        )}${char}`;
+        last = true;
+        
+        
+        lastChar = true;
+      } else if (char === ",") {
+        last = true;
+        formattedText += `${char}\n${indent.repeat(
+          Math.max(0, indentLevel)
+        )}`;
+        lastChar = false
+      } else if (!/[\n\r]/.test(char)) {
+        if(lastChar){
+          formattedText += "\n";
+          lastChar = false
         }
+        formattedText += char;
+      }
     }
     out.innerHTML = syntaxHighlightJSON(formattedText);
     addCollapsibleListeners();
