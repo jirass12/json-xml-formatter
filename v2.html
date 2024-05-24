@@ -350,40 +350,50 @@
       }
 
       function filterText() {
-        // const filterWord = prompt("Enter word to filter by:");
-        // if (!filterWord) return;
-        const filterWord = "nn-be-service";
-        const input = output.getValue();
-        const filteredContent = filterLogs(input, filterWord);
+    // const filterWords = prompt("Enter words to filter by (comma separated):").split(",").map(word => word.trim());
+    const filterWords = ["nn-be-service", "request-params", "request-body"]; // Example words, replace with user input if needed
+    const input = output.getValue();
+    const filteredContent = filterLogs(input, filterWords);
 
-        output.setValue(filteredContent, -1);
-      }
+    let f = formatJSON(filteredContent);
+    output.setValue(f, -1);
+}
 
-      function filterLogs(input, filterWord) {
-        let filteredLines = [];
-        let braceLevel = 0;
-        let startIndex = input.indexOf(filterWord);
+function filterLogs(input, filterWords) {
+    let filteredLines = [];
+    let braceLevel = 0;
+    let startIndex = findNextWordIndex(input, filterWords, 0);
 
-        while (startIndex !== -1) {
-          let endIndex = input.indexOf("}", startIndex);
-          while (endIndex !== -1) {
+    while (startIndex !== -1) {
+        let endIndex = input.indexOf("}", startIndex);
+        while (endIndex !== -1) {
             braceLevel = 0;
             for (let i = startIndex; i <= endIndex; i++) {
-              if (input[i] === "{") braceLevel++;
-              if (input[i] === "}") braceLevel--;
-              if (braceLevel === 0 && input[i] === "}") {
-                filteredLines.push(input.slice(startIndex, i + 1));
-                break;
-              }
+                if (input[i] === "{") braceLevel++;
+                if (input[i] === "}") braceLevel--;
+                if (braceLevel === 0 && input[i] === "}") {
+                    filteredLines.push(input.slice(startIndex, i + 1));
+                    break;
+                }
             }
             if (braceLevel === 0) break;
             endIndex = input.indexOf("}", endIndex + 1);
-          }
-          startIndex = input.indexOf(filterWord, endIndex);
         }
+        startIndex = findNextWordIndex(input, filterWords, endIndex);
+    }
 
-        return filteredLines.join("\n");
-      }
-    </script>
+    return filteredLines.join("\n");
+}
+
+function findNextWordIndex(input, words, start) {
+    let minIndex = -1;
+    for (let word of words) {
+        let index = input.indexOf(word, start);
+        if (index !== -1 && (minIndex === -1 || index < minIndex)) {
+            minIndex = index;
+        }
+    }
+    return minIndex;
+}</script>
   </body>
 </html>
