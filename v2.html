@@ -147,6 +147,15 @@
       #menu4 {
         margin-right: -120px;
       }
+      .ace_marker-layer .ace_selection {
+        background: #053ab1 !important;
+      }
+      .ace_string{
+        color:#eea971 !important;
+      }
+      .ace_variable{
+        color:#9cdcfe !important;
+      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
   </head>
@@ -382,6 +391,7 @@ function filterLogs(input, filterWords) {
         startIndex = findNextWordIndex(input, filterWords, endIndex);
     }
 
+    console.log("🚀 ~ filteredLines:", filteredLines)
     return filteredLines.join("\n");
 }
 
