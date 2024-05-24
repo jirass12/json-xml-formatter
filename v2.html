@@ -72,7 +72,8 @@
 
       #menu1,
       #menu2,
-      #menu3 {
+      #menu3,
+      #menu4 {
         display: none;
         position: fixed;
         bottom: 15px;
@@ -96,7 +97,8 @@
 
       #menu1:hover::before,
       #menu2:hover::before,
-      #menu3:hover::before {
+      #menu3:hover::before,
+      #menu4:hover::before {
         content: "Expand";
         position: absolute;
         bottom: 100%;
@@ -113,7 +115,8 @@
 
       #menu1:hover::after,
       #menu2:hover::after,
-      #menu3:hover::after {
+      #menu3:hover::after,
+      #menu4:hover::after {
         content: "";
         position: absolute;
         top: 0;
@@ -133,8 +136,16 @@
         content: "Collapse";
       }
 
+      #menu4:hover::before {
+        content: "Filter";
+      }
+
       #menu3 {
         margin-right: -60px;
+      }
+
+      #menu4 {
+        margin-right: -120px;
       }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
@@ -144,10 +155,21 @@
       <div id="editor"></div>
       <div id="rad">
         <span>
-          <input onclick="radChange(event)" type="radio" name="lang" value="json" checked />JSON
+          <input
+            onclick="radChange(event)"
+            type="radio"
+            name="lang"
+            value="json"
+            checked
+          />JSON
         </span>
-        <span> 
-          <input onclick="radChange(event)" type="radio" name="lang" value="xml" />XML 
+        <span>
+          <input
+            onclick="radChange(event)"
+            type="radio"
+            name="lang"
+            value="xml"
+          />XML
         </span>
       </div>
       <button onclick="space()">Remove Space</button>
@@ -160,11 +182,13 @@
     <button onclick="expandAll()" id="menu1" title="Expand all">💬</button>
     <button onclick="copyAll()" id="menu2" title="Copy">📋</button>
     <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button>
+    <button onclick="filterText()" id="menu4" title="Collapse all">✅</button>
 
     <script>
-      let menu1 = document.getElementById("menu1")
-      let menu2 = document.getElementById("menu2")
-      let menu3 = document.getElementById("menu3")
+      let menu1 = document.getElementById("menu1");
+      let menu2 = document.getElementById("menu2");
+      let menu3 = document.getElementById("menu3");
+      let menu4 = document.getElementById("menu4");
       var editor = ace.edit("editor");
       editor.setTheme("ace/theme/monokai");
       editor.session.setMode("ace/mode/json");
@@ -207,7 +231,9 @@
         }
         output.setValue(formatted, -1);
         const isVisible = !!editor.getValue();
-        [menu1, menu2, menu3].forEach(menu => menu.style.display = isVisible ? "block" : "none");
+        [menu1, menu2, menu3, menu4].forEach(
+          (menu) => (menu.style.display = isVisible ? "block" : "none")
+        );
       }
 
       function formatXML(text) {
@@ -234,52 +260,49 @@
           const indent = "  ";
           let last = false;
           let lastChar = false;
-          let inString = false
+          let inString = false;
 
           for (let i = 0; i < text.length; i++) {
             const char = text[i];
             if (last && /\s/.test(char)) {
               continue;
             }
-            if(inString && !(/\s/.test(char))) {
-              if(char == `"`) inString = false
+            if (inString && !/\s/.test(char)) {
+              if (char == `"`) inString = false;
               formattedText += char;
-              continue
+              continue;
             }
             last = false;
-            if(char === `"`) inString = true
+            if (char === `"`) inString = true;
             if (char === "{" || char === "[") {
-              if(lastChar){
+              if (lastChar) {
                 formattedText += "\n";
-                lastChar = false
+                lastChar = false;
               }
               last = true;
               formattedText += `${char}\n${indent.repeat(
                 Math.max(0, ++indentLevel)
               )}`;
-              
             } else if (char === "}" || char === "]") {
               formattedText += `\n${indent.repeat(
                 Math.max(0, --indentLevel)
               )}${char}`;
               last = true;
-              
-              
+
               lastChar = true;
             } else if (char === ",") {
               last = true;
               formattedText += `${char}\n${indent.repeat(
                 Math.max(0, indentLevel)
               )}`;
-              lastChar = false
+              lastChar = false;
             } else if (!/[\n\r]/.test(char)) {
-              if(lastChar){
+              if (lastChar) {
                 formattedText += "\n";
-                lastChar = false
+                lastChar = false;
               }
               formattedText += char;
             }
-            
           }
           return formattedText;
         }
@@ -317,15 +340,49 @@
       }
 
       function copyAll() {
-        navigator.clipboard
-          .writeText(output.getValue())
-          .then(function () {
-            let c = document.getElementById("copy");
-            c.style.display = "block";
-            setTimeout(() => {
-              c.style.display = "none";
-            }, 500);
-          });
+        navigator.clipboard.writeText(output.getValue()).then(function () {
+          let c = document.getElementById("copy");
+          c.style.display = "block";
+          setTimeout(() => {
+            c.style.display = "none";
+          }, 500);
+        });
+      }
+
+      function filterText() {
+        // const filterWord = prompt("Enter word to filter by:");
+        // if (!filterWord) return;
+        const filterWord = "nn-be-service";
+        const input = output.getValue();
+        const filteredContent = filterLogs(input, filterWord);
+
+        output.setValue(filteredContent, -1);
+      }
+
+      function filterLogs(input, filterWord) {
+        let filteredLines = [];
+        let braceLevel = 0;
+        let startIndex = input.indexOf(filterWord);
+
+        while (startIndex !== -1) {
+          let endIndex = input.indexOf("}", startIndex);
+          while (endIndex !== -1) {
+            braceLevel = 0;
+            for (let i = startIndex; i <= endIndex; i++) {
+              if (input[i] === "{") braceLevel++;
+              if (input[i] === "}") braceLevel--;
+              if (braceLevel === 0 && input[i] === "}") {
+                filteredLines.push(input.slice(startIndex, i + 1));
+                break;
+              }
+            }
+            if (braceLevel === 0) break;
+            endIndex = input.indexOf("}", endIndex + 1);
+          }
+          startIndex = input.indexOf(filterWord, endIndex);
+        }
+
+        return filteredLines.join("\n");
       }
     </script>
   </body>
