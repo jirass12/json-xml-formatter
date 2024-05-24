@@ -7,24 +7,6 @@ let menu3 = document.getElementById("menu3")
 let scrollTopBtn = document.getElementById("scrollTopBtn");
 let al = document.getElementById("alert");
 
-// let inputChanged = false;
-
-// ta.addEventListener("input", () => {
-//   inputChanged = true;
-//   requestAnimationFrame(checkInputChange);
-// });
-
-// function checkInputChange() {
-//   if (inputChanged) {
-//     inputChanged = false;
-//     formatText();
-//   }
-// }
-
-document.querySelectorAll('input[name="lang"]').forEach((radio) => {
-    radio.addEventListener("change", formatText);
-});
-
 function space() {
     const input = ta.value.trim();
     let isInString = false;
@@ -57,51 +39,6 @@ function formatText() {
     [menu1, menu2, menu3].forEach(menu => menu.style.display = isVisible ? "block" : "none");
     finalOutput = out.innerText;
 }
-
-// function formatJSON(input) {
-//   let formattedText = "",
-//     indentLevel = 0,
-//     indent = "  ",
-//     last = false,
-//     lastChar = "";
-//   for (let i = 0; i < input.length; i++) {
-//     let char = input[i];
-//     if (last && (char == " " || char == "" || char == "\n" || char == "\r")) {
-//       continue;
-//     } else {
-//       last = false;
-//     }
-//     if (char === "{" || char === "[") {
-//       last = true;
-//       formattedText += char + "\n" + indent.repeat(Math.max(0, ++indentLevel));
-//       lastChar = char.trim();
-//     } else if (char === "}" || char === "]") {
-//       formattedText += "\n" + indent.repeat(Math.max(0, --indentLevel)) + char;
-//       last = true;
-//       if (
-//         input[i + 1] &&
-//         input[i + 1] != "," &&
-//         input[i + 1] != "}" &&
-//         input[i + 1] != "]" &&
-//         lastChar.trim() != "" &&
-//         lastChar.trim() != "}" &&
-//         lastChar.trim() != "]"
-//       ) {
-//         formattedText += "\n";
-//       }
-//       lastChar = char.trim();
-//     } else if (char === ",") {
-//       last = true;
-//       formattedText += char + "\n" + indent.repeat(Math.max(0, indentLevel));
-//       lastChar = char.trim();
-//     } else if (char !== "\n" && char !== "\r") {
-//       formattedText += char;
-//       lastChar = char.trim();
-//     }
-//   }
-//   out.innerHTML = syntaxHighlightJSON(formattedText);
-//   addCollapsibleListeners();
-// }
 
 function formatJSON(text) {
     let formattedText = "";
@@ -157,7 +94,6 @@ function formatJSON(text) {
     out.innerHTML = syntaxHighlightJSON(formattedText);
     addCollapsibleListeners();
 }
-
 
 function formatXML(input) {
     let formattedText = "",

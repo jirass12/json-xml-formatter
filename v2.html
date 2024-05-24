@@ -144,9 +144,11 @@
       <div id="editor"></div>
       <div id="rad">
         <span>
-          <input type="radio" name="lang" value="json" checked />JSON
+          <input onclick="radChange(event)" type="radio" name="lang" value="json" checked />JSON
         </span>
-        <span> <input type="radio" name="lang" value="xml" />XML </span>
+        <span> 
+          <input onclick="radChange(event)" type="radio" name="lang" value="xml" />XML 
+        </span>
       </div>
       <button onclick="space()">Remove Space</button>
       <button onclick="clearText()">Clear</button>
@@ -183,9 +185,6 @@
       output.session.setUseWorker(false);
       output.session.setUseWrapMode(true);
 
-      document.querySelectorAll('input[name="lang"]').forEach((radio) => {
-        radio.addEventListener("change", radChange);
-      });
       function radChange(e) {
         if (e.target.value == "json") {
           editor.session.setMode("ace/mode/json");
