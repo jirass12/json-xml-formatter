@@ -1,184 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>JSON XML Formatter</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        background: #161616;
-      }
-      .con {
-        display: flex;
-        gap: 20px;
-      }
 
-      #editor {
-        width: 1000px;
-        flex: 5;
-        height: 200px;
-        min-width: 200px;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <title>JSON XML Formatter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #161616;
+      color: white;
+      display: flex;
+    }
 
-      #rad {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 20px;
-        color: white;
-        min-width: 65px;
-      }
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
 
-      .con button {
-        flex: 1;
-        font-size: 20px;
-        background: #45474a;
-        color: white;
-        border: 1px solid #878787;
-        line-height: 30px;
-      }
+    ::-webkit-scrollbar-track {
+      background: #1e1e1e;
+      border-radius: 10px;
+    }
 
-      .con button:hover {
-        background: #414346;
-      }
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 10px;
+    }
 
-      .con button:active {
-        background: #45474a;
-      }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #888;
+    }
 
-      .container {
-        margin-top: 20px;
-        width: 100%;
-        height: calc(100vh - 320px);
-      }
+    .sidebar {
+      width: 300px;
+      height: 100vh;
+      background: #1e1e1e;
+      overflow-y: auto;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
 
-      #output {
-        width: 100%;
-        height: 100%;
-      }
+    .sidebar.hidden {
+      transform: translateX(-100%);
+      width: 0;
+    }
 
-      #copy {
-        display: none;
-        position: fixed;
-        bottom: 10px;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: #f3f3f3;
-        padding: 15px;
-        border-radius: 5px;
-        border: 1px solid #d9d9d9;
-      }
+    .sidebar h2 {
+      margin-top: 0;
+    }
 
-      #menu1,
-      #menu2,
-      #menu3,
-      #menu4 {
-        display: none;
-        position: fixed;
-        bottom: 15px;
-        z-index: 99;
-        font-size: 18px;
-        border: none;
-        outline: none;
-        background-color: #555;
-        color: white;
-        cursor: pointer;
-        padding: 15px;
-        border-radius: 4px;
-        transform: translateX(50%);
-        width: 50px;
-        right: 50%;
-      }
+    .history-item {
+      padding: 10px;
+      background: #2e2e2e;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative;
+    }
 
-      #menu1 {
-        margin-right: 60px;
-      }
+    .history-item span {
+      display: block;
+      width: 200px;
+      height: 20px;
+      overflow: hidden;
+    }
 
-      #menu1:hover::before,
-      #menu2:hover::before,
-      #menu3:hover::before,
-      #menu4:hover::before {
-        content: "Expand";
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translate(-50%, -10px);
-        background-color: #ffffff;
-        color: black;
-        text-align: center;
-        padding: 5px;
-        border-radius: 4px;
-        font-size: 12px;
-        z-index: 50;
-      }
+    .history-item:hover {
+      background: #3e3e3e;
+    }
 
-      #menu1:hover::after,
-      #menu2:hover::after,
-      #menu3:hover::after,
-      #menu4:hover::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateY(-10px);
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: #ffffff transparent transparent transparent;
-      }
+    .delete-btn {
+      background: #f32424;
+      padding: 11px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      right: 0px;
+      transform: translate(0, -50%);
+      border-radius: 0 4px 4px 0;
+      z-index: 1;
+    }
 
-      #menu2:hover::before {
-        content: "Copy";
-      }
+    .delete-btn:hover {
+      background: red;
+    }
 
-      #menu3:hover::before {
-        content: "Collapse";
-      }
+    .main {
+      flex: 1;
+      padding: 20px;
+      box-sizing: border-box;
+    }
 
-      #menu4:hover::before {
-        content: "Filter Axelor";
-      }
+    .con {
+      display: flex;
+      gap: 20px;
+    }
 
-      #menu3 {
-        margin-right: -60px;
-      }
+    #editor {
+      width: 100%;
+      flex: 5;
+      height: 200px;
+      min-width: 200px;
+    }
 
-      #menu4 {
-        margin-right: -120px;
-      }
-      .ace_marker-layer .ace_selection {
-        background: #053ab1 !important;
-      }
-      .ace_string{
-        color:#eea971 !important;
-      }
-      .ace_variable{
-        color:#9cdcfe !important;
-      }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
-  </head>
-  <body>
+    #rad {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      color: white;
+      min-width: 65px;
+    }
+
+    .con button {
+      flex: 1;
+      font-size: 20px;
+      background: #45474a;
+      color: white;
+      border: 1px solid #878787;
+      line-height: 30px;
+    }
+
+    .con button:hover {
+      background: #414346;
+    }
+
+    .con button:active {
+      background: #45474a;
+    }
+
+    .container {
+      margin-top: 20px;
+      width: 100%;
+      height: calc(100vh - 320px);
+    }
+
+    #output {
+      width: 100%;
+      height: 100%;
+    }
+
+    #copy {
+      display: none;
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #f3f3f3;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #d9d9d9;
+    }
+
+    #menu0,
+    #menu1,
+    #menu2,
+    #menu3,
+    #menu4 {
+      display: none;
+      position: fixed;
+      bottom: 15px;
+      z-index: 99;
+      font-size: 18px;
+      border: none;
+      outline: none;
+      background-color: #555;
+      color: white;
+      cursor: pointer;
+      padding: 15px;
+      border-radius: 4px;
+      transform: translateX(50%);
+      width: 50px;
+      right: 50%;
+    }
+
+    #menu0:hover::before,
+    #menu1:hover::before,
+    #menu2:hover::before,
+    #menu3:hover::before,
+    #menu4:hover::before {
+      content: "Expand";
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translate(-50%, -10px);
+      background-color: #ffffff;
+      color: black;
+      text-align: center;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 50;
+    }
+
+    #menu0:hover::before {
+      content: "Save";
+    }
+
+    #menu2:hover::before {
+      content: "Copy";
+    }
+
+    #menu3:hover::before {
+      content: "Collapse";
+    }
+
+    #menu4:hover::before {
+      content: "Filter Axelor";
+    }
+
+    #menu0 {
+      margin-right: 120px;
+    }
+
+    #menu1 {
+      margin-right: 60px;
+    }
+
+    #menu3 {
+      margin-right: -60px;
+    }
+
+    #menu4 {
+      margin-right: -120px;
+    }
+
+    /* .ace_marker-layer .ace_selection {
+      background: #053ab1 !important;
+    }
+
+    .ace_string {
+      color: #eea971 !important;
+    }
+
+    .ace_variable {
+      color: #9cdcfe !important;
+    } */
+
+    .toggle-sidebar-btn {
+      top: 20px;
+      left: 20px;
+      background: #45474a;
+      color: white;
+      border: none;
+      padding: 0 7px;
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-sidebar-btn:hover {
+      background: #414346;
+    }
+
+    .toggle-sidebar-btn:active {
+      background: #45474a;
+    }
+
+    .arrow {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .arrow.rotated {
+      transform: rotate(180deg);
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+</head>
+
+<body>
+  <div class="toggle-sidebar-btn" onclick="toggleSidebar()">
+    <span class="arrow rotated">←</span>
+  </div>
+  <div class="sidebar hidden">
+    <div style="padding:20px">
+      <h2>History</h2>
+      <div id="historyList"></div>
+    </div>
+  </div>
+  <div class="main">
     <div class="con">
       <div id="editor"></div>
       <div id="rad">
         <span>
-          <input
-            onclick="radChange(event)"
-            type="radio"
-            name="lang"
-            value="json"
-            checked
-          />JSON
+          <input onclick="radChange(event)" type="radio" name="lang" value="json" checked />JSON
         </span>
         <span>
-          <input
-            onclick="radChange(event)"
-            type="radio"
-            name="lang"
-            value="xml"
-          />XML
+          <input onclick="radChange(event)" type="radio" name="lang" value="xml" />XML
         </span>
       </div>
       <button onclick="space()">Remove Space</button>
@@ -188,222 +308,526 @@
       <div id="output"></div>
     </div>
     <div id="copy">Copied</div>
+    <button onclick="save()" id="menu0" title="Save">💾</button>
     <button onclick="expandAll()" id="menu1" title="Expand all">💬</button>
     <button onclick="copyAll()" id="menu2" title="Copy">📋</button>
     <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button>
     <button onclick="filterText()" id="menu4" title="Filter Axelor">✅</button>
+  </div>
 
-    <script>
-      let menu1 = document.getElementById("menu1");
-      let menu2 = document.getElementById("menu2");
-      let menu3 = document.getElementById("menu3");
-      let menu4 = document.getElementById("menu4");
-      var editor = ace.edit("editor");
+  <script>
+    let menu0 = document.getElementById("menu0");
+    let menu1 = document.getElementById("menu1");
+    let menu2 = document.getElementById("menu2");
+    let menu3 = document.getElementById("menu3");
+    let menu4 = document.getElementById("menu4");
+    var editor = ace.edit("editor");
+    var output = ace.edit("output");
+
+    function initEditor(editor) {
       editor.setTheme("ace/theme/monokai");
-      editor.session.setMode("ace/mode/json");
       editor.setShowPrintMargin(false);
       editor.session.setUseWorker(false);
       editor.session.setUseWrapMode(true);
-      editor.setOptions({
-        showLineNumbers: true,
-        showGutter: true,
-      });
-
-      editor.addEventListener("change", format);
-
-      var output = ace.edit("output");
-      output.setTheme("ace/theme/monokai");
-      output.session.setMode("ace/mode/json");
-      output.setShowPrintMargin(false);
-      output.session.setUseWorker(false);
-      output.session.setUseWrapMode(true);
-
-      function radChange(e) {
-        if (e.target.value == "json") {
-          editor.session.setMode("ace/mode/json");
-          output.session.setMode("ace/mode/json");
-        } else if (e.target.value == "xml") {
-          editor.session.setMode("ace/mode/xml");
-          output.session.setMode("ace/mode/xml");
-        }
-        format();
-      }
-
-      function format() {
-        let selected = document.querySelector('input[name="lang"]:checked');
-        var text = editor.getValue();
-        var formatted;
-        if (selected.value == "json") {
-          formatted = formatJSON(text);
-        } else if (selected.value == "xml") {
-          formatted = formatXML(text);
-        }
-        output.setValue(formatted, -1);
-        const isVisible = !!editor.getValue();
-        [menu1, menu2, menu3, menu4].forEach(
-          (menu) => (menu.style.display = isVisible ? "block" : "none")
-        );
-      }
-
-      function formatXML(text) {
-        let formattedText = "",
-          indentLevel = 0,
-          indent = "    ";
-        text.split(/>\s*</).forEach((node) => {
-          if (node.match(/^\/\w/)) indentLevel--;
-          formattedText +=
-            indent.repeat(Math.max(0, indentLevel)) + "<" + node + ">\n";
-          if (node.match(/^<?\w[^>]*[^\/]$/)) indentLevel++;
+      editor.setOptions
+        ({
+          showLineNumbers: true,
+          showGutter: true,
         });
-        formattedText = formattedText.substring(1, formattedText.length - 2);
+    }
+
+    initEditor(editor);
+    initEditor(output);
+    editor.session.setMode("ace/mode/json");
+    output.session.setMode("ace/mode/json");
+
+    editor.addEventListener("change", format);
+
+    function radChange(e) {
+      if (e.target.value == "json") {
+        editor.session.setMode("ace/mode/json");
+        output.session.setMode("ace/mode/json");
+      } else if (e.target.value == "xml") {
+        editor.session.setMode("ace/mode/xml");
+        output.session.setMode("ace/mode/xml");
+      }
+      format();
+    }
+
+    function format() {
+      let selected = document.querySelector('input[name="lang"]:checked');
+      var text = editor.getValue();
+      var formatted;
+      if (selected.value == "json") {
+        formatted = formatJSON(text);
+      } else if (selected.value == "xml") {
+        formatted = formatXML(text);
+      }
+      output.setValue(formatted, -1);
+      const isVisible = !!editor.getValue();
+      [menu0, menu1, menu2, menu3, menu4].forEach(
+        (menu) => (menu.style.display = isVisible ? "block" : "none")
+      );
+    }
+
+    function formatXML(text) {
+      let formattedText = "",
+        indentLevel = 0,
+        indent = "    ";
+      text.split(/>\s*</).forEach((node) => {
+        if (node.match(/^\/\w/)) indentLevel--;
+        formattedText +=
+          indent.repeat(Math.max(0, indentLevel)) + "<" + node + ">\n";
+        if (node.match(/^<?\w[^>]*[^\/]$/)) indentLevel++;
+      });
+      formattedText = formattedText.substring(1, formattedText.length - 2);
+      return formattedText;
+    }
+
+    function formatJSON(text) {
+      try {
+        var parsed = JSON.parse(text);
+        return JSON.stringify(parsed, null, 2);
+      } catch (e) {
+        let formattedText = "";
+        let indentLevel = 0;
+        const indent = "  ";
+        let last = false;
+        let lastChar = false;
+        let inString = false;
+
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          if (last && /\s/.test(char)) {
+            continue;
+          }
+          if (inString && !/\s/.test(char)) {
+            if (char == `"`) inString = false;
+            formattedText += char;
+            continue;
+          }
+          last = false;
+          if (char === `"`) inString = true;
+          if (char === "{" || char === "[") {
+            if (lastChar) {
+              formattedText += "\n";
+              lastChar = false;
+            }
+            last = true;
+            formattedText += `${char}\n${indent.repeat(
+              Math.max(0, ++indentLevel)
+            )}`;
+          } else if (char === "}" || char === "]") {
+            formattedText += `\n${indent.repeat(
+              Math.max(0, --indentLevel)
+            )}${char}`;
+            last = true;
+
+            lastChar = true;
+          } else if (char === ",") {
+            last = true;
+            formattedText += `${char}\n${indent.repeat(
+              Math.max(0, indentLevel)
+            )}`;
+            lastChar = false;
+          } else if (!/[\n\r]/.test(char)) {
+            if (lastChar) {
+              formattedText += "\n";
+              lastChar = false;
+            }
+            formattedText += char;
+          }
+        }
         return formattedText;
       }
+    }
 
-      function formatJSON(text) {
-        try {
-          var parsed = JSON.parse(text);
-          return JSON.stringify(parsed, null, 2);
-        } catch (e) {
-          let formattedText = "";
-          let indentLevel = 0;
-          const indent = "  ";
-          let last = false;
-          let lastChar = false;
-          let inString = false;
+    function space() {
+      const input = editor.getValue();
+      let isInString = false;
+      let result = "";
 
-          for (let i = 0; i < text.length; i++) {
-            const char = text[i];
-            if (last && /\s/.test(char)) {
-              continue;
-            }
-            if (inString && !/\s/.test(char)) {
-              if (char == `"`) inString = false;
-              formattedText += char;
-              continue;
-            }
-            last = false;
-            if (char === `"`) inString = true;
-            if (char === "{" || char === "[") {
-              if (lastChar) {
-                formattedText += "\n";
-                lastChar = false;
-              }
-              last = true;
-              formattedText += `${char}\n${indent.repeat(
-                Math.max(0, ++indentLevel)
-              )}`;
-            } else if (char === "}" || char === "]") {
-              formattedText += `\n${indent.repeat(
-                Math.max(0, --indentLevel)
-              )}${char}`;
-              last = true;
+      for (let i = 0; i < input.length; i++) {
+        let char = input[i];
 
-              lastChar = true;
-            } else if (char === ",") {
-              last = true;
-              formattedText += `${char}\n${indent.repeat(
-                Math.max(0, indentLevel)
-              )}`;
-              lastChar = false;
-            } else if (!/[\n\r]/.test(char)) {
-              if (lastChar) {
-                formattedText += "\n";
-                lastChar = false;
-              }
-              formattedText += char;
-            }
-          }
-          return formattedText;
+        if (char === '"' && (i === 0 || input[i - 1] !== "\\")) {
+          isInString = !isInString;
+        }
+
+        if (isInString || (!isInString && !/\s/.test(char))) {
+          result += char;
         }
       }
+      editor.setValue(result, -1);
+    }
 
-      function space() {
-        const input = editor.getValue();
-        let isInString = false;
-        let result = "";
+    function clearText() {
+      editor.setValue("");
+    }
 
-        for (let i = 0; i < input.length; i++) {
-          let char = input[i];
+    function collapseAll() {
+      output.getSession().foldAll();
+    }
 
-          if (char === '"' && (i === 0 || input[i - 1] !== "\\")) {
-            isInString = !isInString;
-          }
+    function expandAll() {
+      output.getSession().unfold();
+    }
 
-          if (isInString || (!isInString && !/\s/.test(char))) {
-            result += char;
-          }
-        }
-        editor.setValue(result, -1);
-      }
+    function copyAll() {
+      navigator.clipboard.writeText(output.getValue()).then(function () {
+        let c = document.getElementById("copy");
+        c.style.display = "block";
+        setTimeout(() => {
+          c.style.display = "none";
+        }, 500);
+      });
+    }
 
-      function clearText() {
-        editor.setValue("");
-      }
+    function filterText() {
+      const filterWords = ["nn-be-service", "request-params", "request-body"];
+      const input = output.getValue();
+      const filteredContent = filterLogs(input, filterWords);
 
-      function collapseAll() {
-        output.getSession().foldAll();
-      }
+      let f = formatJSON(filteredContent);
+      output.setValue(f, -1);
+    }
 
-      function expandAll() {
-        output.getSession().unfold();
-      }
-
-      function copyAll() {
-        navigator.clipboard.writeText(output.getValue()).then(function () {
-          let c = document.getElementById("copy");
-          c.style.display = "block";
-          setTimeout(() => {
-            c.style.display = "none";
-          }, 500);
-        });
-      }
-
-      function filterText() {
-    // const filterWords = prompt("Enter words to filter by (comma separated):").split(",").map(word => word.trim());
-    const filterWords = ["nn-be-service", "request-params", "request-body"]; // Example words, replace with user input if needed
-    const input = output.getValue();
-    const filteredContent = filterLogs(input, filterWords);
-
-    let f = formatJSON(filteredContent);
-    output.setValue(f, -1);
-}
-
-function filterLogs(input, filterWords) {
-    let filteredLines = [];
-    let braceLevel = 0;
-    let startIndex = findNextWordIndex(input, filterWords, 0);
-
-    while (startIndex !== -1) {
+    function filterLogs(input, filterWords) {
+      let filteredLines = [];
+      let braceLevel = 0;
+      let startIndex = findNextWordIndex(input, filterWords, 0);
+      let ss = []
+      ss.push(startIndex);
+      let count = 0
+      let lastIp = ""
+      while (startIndex !== -1) {
         let endIndex = input.indexOf("}", startIndex);
         while (endIndex !== -1) {
-            braceLevel = 0;
-            for (let i = startIndex; i <= endIndex; i++) {
-                if (input[i] === "{") braceLevel++;
-                if (input[i] === "}") braceLevel--;
-                if (braceLevel === 0 && input[i] === "}") {
-                    filteredLines.push(input.slice(startIndex, i + 1));
-                    break;
+          count++
+          braceLevel = 0;
+          for (let i = startIndex; i <= endIndex; i++) {
+            if (input[i] === "{") braceLevel++;
+            if (input[i] === "}") braceLevel--;
+            if (braceLevel === 0 && input[i] === "}") {
+              let ip = input.slice(startIndex, i + 1);
+              let q = false;
+              if (ip.includes("BE Send Mongo Query:")) {
+                ip = input.slice(startIndex, i + 200);
+                let queryIndex = ip.indexOf("BE Send Mongo Query:") + "BE Send Mongo Query:".length;
+                let firstQuoteIndex = ip.indexOf('"', queryIndex);
+                if (ip[firstQuoteIndex - 4] == "{") {
+                  ip = input.slice(startIndex, i + 1)
+                } else {
+                  let lastQuoteIndex = findLastQuoteIndex(ip, firstQuoteIndex);
+                  if (firstQuoteIndex !== -1 && lastQuoteIndex !== -1) {
+                    ip = ip.slice(0, queryIndex) + " {" + ip.slice(queryIndex, firstQuoteIndex + 1) + ip.slice(firstQuoteIndex + 1, lastQuoteIndex + 1) + " }";
+                  }
                 }
+                q = true;
+              }
+              if (ip.includes("nn-be-service")) {
+                if (input[startIndex - 2] == '"') {
+                  ip = q ? input.slice(input.indexOf(ip) - 24, i + 1) : input.slice(startIndex - 24, i + 1)
+                } else {
+                  let d = 1
+                  let e = 1
+                  let tt = ""
+                  while (e <= 31) {
+                    if (!(/\s/.test(input[startIndex - d]))) {
+                      tt += input[startIndex - d]
+                      e++
+                    }
+                    d++
+                  }
+                  tt = tt.split("").reverse().join("")
+                  let t = tt.slice(1, 24).trim();
+                  t = new Date(t)
+                  t = t == "Invalid Date" ? "" : '"[' + t.getDate().toString().padStart(2, '0') + '/' +
+                    (t.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                    t.getFullYear() + ' ' +
+                    t.getHours().toString().padStart(2, '0') + ':' +
+                    t.getMinutes().toString().padStart(2, '0') + ':' +
+                    t.getSeconds().toString().padStart(2, '0') + ']" ';
+                  ip = q ? t + ip : t + input.slice(startIndex, i + 1);
+                }
+              }
+              lastIp = ip
+              filteredLines.push(ip);
+              break;
             }
-            if (braceLevel === 0) break;
-            endIndex = input.indexOf("}", endIndex + 1);
+          }
+          if (braceLevel === 0) break;
+          endIndex = input.indexOf("}", endIndex + 1);
+          if (count >= 10000) break
         }
         startIndex = findNextWordIndex(input, filterWords, endIndex);
+
+        if (ss.indexOf(startIndex) >= 0) break
+      }
+
+      return filteredLines.join("\n");
     }
 
-    console.log("🚀 ~ filteredLines:", filteredLines)
-    return filteredLines.join("\n");
-}
+    function findLastQuoteIndex(input, start) {
+      let lastQuoteIndex = -1;
 
-function findNextWordIndex(input, words, start) {
-    let minIndex = -1;
-    for (let word of words) {
+      for (let i = start + 1; i < input.length; i++) {
+        if (input[i] === '"' && input[i - 1] !== '\\') {
+          lastQuoteIndex = i;
+          break
+        }
+      }
+      return lastQuoteIndex;
+    }
+
+    function findNextWordIndex(input, words, start) {
+      let minIndex = -1;
+      for (let word of words) {
         let index = input.indexOf(word, start);
         if (index !== -1 && (minIndex === -1 || index < minIndex)) {
-            minIndex = index;
+          minIndex = index;
         }
+      }
+
+      return minIndex;
     }
-    return minIndex;
-}</script>
-  </body>
+
+    function save() {
+      let o = output.getValue();
+      let n
+
+        = prompt("Save name")
+      if (n === null) {
+        return
+      }
+      let his = JSON.parse(localStorage.getItem('history')) || [];
+      let selected = document.querySelector('input[name="lang"]:checked');
+      his.push({ n: n || "Untitled", v: o, t: selected.value })
+      localStorage.setItem('history', JSON.stringify(his));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      const history = JSON.parse(localStorage.getItem('history')) || [];
+      historyList.innerHTML = '';
+
+      history.reverse().forEach((item, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.classList.add('history-item');
+        historyItem.innerHTML = `
+          <span>${item.n}</span>
+          <button class="delete-btn" onclick="deleteHistory(event, ${history.length - 1 - index})">🗑</button>
+        `;
+        historyItem.onclick = () => loadHistory(item.v, item.t);
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    function loadHistory(value, type) {
+      editor.setValue(value, -1);
+      if (type === 'json') {
+        document.querySelector('input[name="lang"][value="json"]').checked = true;
+        editor.session.setMode("ace/mode/json");
+        output.session.setMode("ace/mode/json");
+      } else if (type === 'xml') {
+        document.querySelector('input[name="lang"][value="xml"]').checked = true;
+        editor.session.setMode("ace/mode/xml");
+        output.session.setMode("ace/mode/xml");
+      }
+      editor.resize();
+      output.resize();
+      format();
+    }
+
+    function deleteHistory(event, index) {
+      event.stopPropagation();
+      let his = JSON.parse(localStorage.getItem('history')) || [];
+      his.splice(index, 1);
+      localStorage.setItem('history', JSON.stringify(his));
+      renderHistory();
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const arrow = document.querySelector('.toggle-sidebar-btn .arrow');
+      sidebar.classList.toggle('hidden');
+      arrow.classList.toggle('rotated');
+      setTimeout(() => {
+        editor.resize();
+        output.resize();
+      }, 320)
+    }
+
+    function saveSettings() {
+      const editorSettings = {
+        theme: editor.getTheme(),
+        mode: editor.session.getMode().$id,
+        useWrapMode: editor.getSession().getUseWrapMode(),
+        showLineNumbers: editor.getOption('showLineNumbers'),
+        showGutter: editor.getOption('showGutter'),
+        fontSize: editor.getFontSize(),
+        showPrintMargin: editor.getShowPrintMargin(),
+        printMarginColumn: editor.getOption('printMarginColumn'),
+        highlightActiveLine: editor.getHighlightActiveLine(),
+        highlightSelectedWord: editor.getHighlightSelectedWord(),
+        displayIndentGuides: editor.getDisplayIndentGuides(),
+        behavioursEnabled: editor.getBehavioursEnabled(),
+        wrapBehavioursEnabled: editor.getWrapBehavioursEnabled(),
+        useSoftTabs: editor.getOption('useSoftTabs'),
+        tabSize: editor.getOption('tabSize'),
+        scrollPastEnd: editor.getOption('scrollPastEnd'),
+        animatedScroll: editor.getOption('animatedScroll'),
+        mergeUndoDeltas: editor.getOption('mergeUndoDeltas'),
+        keybinding: editor.getKeyboardHandler() && editor.getKeyboardHandler().$id,
+      };
+
+      const outputSettings = {
+        theme: output.getTheme(),
+        mode: output.session.getMode().$id,
+        useWrapMode: output.getSession().getUseWrapMode(),
+        showLineNumbers: output.getOption('showLineNumbers'),
+        showGutter: output.getOption('showGutter'),
+        fontSize: output.getFontSize(),
+        showPrintMargin: output.getShowPrintMargin(),
+        printMarginColumn: output.getOption('printMarginColumn'),
+        highlightActiveLine: output.getHighlightActiveLine(),
+        highlightSelectedWord: output.getHighlightSelectedWord(),
+        displayIndentGuides: output.getDisplayIndentGuides(),
+        behavioursEnabled: output.getBehavioursEnabled(),
+        wrapBehavioursEnabled: output.getWrapBehavioursEnabled(),
+        useSoftTabs: output.getOption('useSoftTabs'),
+        tabSize: output.getOption('tabSize'),
+        scrollPastEnd: output.getOption('scrollPastEnd'),
+        animatedScroll: output.getOption('animatedScroll'),
+        mergeUndoDeltas: output.getOption('mergeUndoDeltas'),
+        keybinding: output.getKeyboardHandler() && editor.getKeyboardHandler().$id,
+        readOnly: output.getOption('readOnly'),
+      };
+
+      localStorage.setItem('editorSettings', JSON.stringify(editorSettings));
+      localStorage.setItem('outputSettings', JSON.stringify(outputSettings));
+    }
+
+    function loadSettings() {
+      const savedEditorSettings = JSON.parse(localStorage.getItem('editorSettings'));
+      const savedOutputSettings = JSON.parse(localStorage.getItem('outputSettings'));
+
+      if (savedEditorSettings) {
+        editor.setTheme(savedEditorSettings.theme);
+        editor.session.setMode(savedEditorSettings.mode);
+        editor.getSession().setUseWrapMode(savedEditorSettings.useWrapMode);
+        editor.setOption('showLineNumbers', savedEditorSettings.showLineNumbers);
+        editor.setOption('showGutter', savedEditorSettings.showGutter);
+        editor.setFontSize(savedEditorSettings.fontSize);
+        editor.setShowPrintMargin(savedEditorSettings.showPrintMargin);
+        editor.setOption('printMarginColumn', savedEditorSettings.printMarginColumn);
+        editor.setHighlightActiveLine(savedEditorSettings.highlightActiveLine);
+        editor.setHighlightSelectedWord(savedEditorSettings.highlightSelectedWord);
+        editor.setDisplayIndentGuides(savedEditorSettings.displayIndentGuides);
+        editor.setBehavioursEnabled(savedEditorSettings.behavioursEnabled);
+        editor.setWrapBehavioursEnabled(savedEditorSettings.wrapBehavioursEnabled);
+        editor.setOption('useSoftTabs', savedEditorSettings.useSoftTabs);
+        editor.setOption('tabSize', savedEditorSettings.tabSize);
+        editor.setOption('scrollPastEnd', savedEditorSettings.scrollPastEnd);
+        editor.setOption('animatedScroll', savedEditorSettings.animatedScroll);
+        editor.setOption('mergeUndoDeltas', savedEditorSettings.mergeUndoDeltas);
+        editor.setKeyboardHandler(savedEditorSettings.keybinding);
+      }
+
+      if (savedOutputSettings) {
+        output.setTheme(savedOutputSettings.theme);
+        output.session.setMode(savedOutputSettings.mode);
+        output.getSession().setUseWrapMode(savedOutputSettings.useWrapMode);
+        output.setOption('showLineNumbers', savedOutputSettings.showLineNumbers);
+        output.setOption('showGutter', savedOutputSettings.showGutter);
+        output.setFontSize(savedOutputSettings.fontSize);
+        output.setShowPrintMargin(savedOutputSettings.showPrintMargin);
+        output.setOption('printMarginColumn', savedOutputSettings.printMarginColumn);
+        output.setHighlightActiveLine(savedOutputSettings.highlightActiveLine);
+        output.setHighlightSelectedWord(savedOutputSettings.highlightSelectedWord);
+        output.setDisplayIndentGuides(savedOutputSettings.displayIndentGuides);
+        output.setBehavioursEnabled(savedOutputSettings.behavioursEnabled);
+        output.setWrapBehavioursEnabled(savedOutputSettings.wrapBehavioursEnabled);
+        output.setOption('useSoftTabs', savedOutputSettings.useSoftTabs);
+        output.setOption('tabSize', savedOutputSettings.tabSize);
+        output.setOption('scrollPastEnd', savedOutputSettings.scrollPastEnd);
+        output.setOption('animatedScroll', savedOutputSettings.animatedScroll);
+        output.setOption('mergeUndoDeltas', savedOutputSettings.mergeUndoDeltas);
+        output.setKeyboardHandler(savedOutputSettings.keybinding);
+        output.setOption('readOnly', savedOutputSettings.readOnly);
+      }
+    }
+
+    function checkSettingsChange() {
+      const currentEditorSettings = {
+        theme: editor.getTheme(),
+        mode: editor.session.getMode().$id,
+        useWrapMode: editor.getSession().getUseWrapMode(),
+        showLineNumbers: editor.getOption('showLineNumbers'),
+        showGutter: editor.getOption('showGutter'),
+        fontSize: editor.getFontSize(),
+        showPrintMargin: editor.getShowPrintMargin(),
+        printMarginColumn: editor.getOption('printMarginColumn'),
+        highlightActiveLine: editor.getHighlightActiveLine(),
+        highlightSelectedWord: editor.getHighlightSelectedWord(),
+        displayIndentGuides: editor.getDisplayIndentGuides(),
+        behavioursEnabled: editor.getBehavioursEnabled(),
+        wrapBehavioursEnabled: editor.getWrapBehavioursEnabled(),
+        useSoftTabs: editor.getOption('useSoftTabs'),
+        tabSize: editor.getOption('tabSize'),
+        scrollPastEnd: editor.getOption('scrollPastEnd'),
+        animatedScroll: editor.getOption('animatedScroll'),
+        mergeUndoDeltas: editor.getOption('mergeUndoDeltas'),
+        keybinding: editor.getKeyboardHandler() && editor.getKeyboardHandler().$id,
+      };
+
+      const currentOutputSettings = {
+        theme: output.getTheme(),
+        mode: output.session.getMode().$id,
+        useWrapMode: output.getSession().getUseWrapMode(),
+        showLineNumbers: output.getOption('showLineNumbers'),
+        showGutter: output.getOption('showGutter'),
+        fontSize: output.getFontSize(),
+        showPrintMargin: output.getShowPrintMargin(),
+        printMarginColumn: output.getOption('printMarginColumn'),
+        highlightActiveLine: output.getHighlightActiveLine(),
+        highlightSelectedWord: output.getHighlightSelectedWord(),
+        displayIndentGuides: output.getDisplayIndentGuides(),
+        behavioursEnabled: output.getBehavioursEnabled(),
+        wrapBehavioursEnabled: output.getWrapBehavioursEnabled(),
+        useSoftTabs: output.getOption('useSoftTabs'),
+        tabSize: output.getOption('tabSize'),
+        scrollPastEnd: output.getOption('scrollPastEnd'),
+        animatedScroll: output.getOption('animatedScroll'),
+        mergeUndoDeltas: output.getOption('mergeUndoDeltas'),
+        keybinding: output.getKeyboardHandler() && editor.getKeyboardHandler().$id,
+        readOnly: output.getOption('readOnly'),
+      };
+
+      const savedEditorSettings = JSON.parse(localStorage.getItem('editorSettings'));
+      const savedOutputSettings = JSON.parse(localStorage.getItem('outputSettings'));
+
+      if (JSON.stringify(currentEditorSettings) !== JSON.stringify(savedEditorSettings)) {
+        localStorage.setItem('editorSettings', JSON.stringify(currentEditorSettings));
+      }
+
+      if (JSON.stringify(currentOutputSettings) !== JSON.stringify(savedOutputSettings)) {
+        localStorage.setItem('outputSettings', JSON.stringify(currentOutputSettings));
+      }
+    }
+
+    function initialize() {
+      loadSettings();
+      renderHistory();
+
+      window.addEventListener('beforeunload', (event) => {
+        saveSettings();
+      });
+    }
+
+    initialize();
+  </script>
+</body>
+
 </html>
