@@ -103,12 +103,13 @@
     .con {
       display: flex;
       gap: 20px;
+      height: 100px;
     }
 
     #editor {
       width: 100%;
       flex: 5;
-      height: 200px;
+      height: 100px;
       min-width: 200px;
     }
 
@@ -141,7 +142,7 @@
     .container {
       margin-top: 20px;
       width: 100%;
-      height: calc(100vh - 320px);
+      height: calc(100vh - 220px);
     }
 
     #output {
@@ -152,20 +153,21 @@
     #copy {
       display: none;
       position: fixed;
-      bottom: 10px;
+      bottom: 50px;
       left: 50%;
       transform: translate(-50%, -50%);
       background: #f3f3f3;
       padding: 15px;
       border-radius: 5px;
       border: 1px solid #d9d9d9;
+      z-index: 9999;
+      color: black;
     }
 
     #menu0,
     #menu1,
     #menu2,
-    #menu3,
-    #menu4 {
+    #menu3{
       display: none;
       position: fixed;
       bottom: 15px;
@@ -186,9 +188,8 @@
     #menu0:hover::before,
     #menu1:hover::before,
     #menu2:hover::before,
-    #menu3:hover::before,
-    #menu4:hover::before {
-      content: "Expand";
+    #menu3:hover::before{
+      content: "Fold Unfold";
       position: absolute;
       bottom: 100%;
       left: 50%;
@@ -202,6 +203,21 @@
       z-index: 50;
     }
 
+    #menu0:hover::after, 
+    #menu1:hover::after,
+    #menu2:hover::after,
+    #menu3:hover::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateY(-10px);
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #ffffff transparent transparent transparent;
+    }
+
     #menu0:hover::before {
       content: "Save";
     }
@@ -211,12 +227,12 @@
     }
 
     #menu3:hover::before {
-      content: "Collapse";
-    }
-
-    #menu4:hover::before {
       content: "Filter Axelor";
     }
+
+    /* #menu4:hover::before {
+      content: "Filter Axelor";
+    } */
 
     #menu0 {
       margin-right: 120px;
@@ -230,9 +246,9 @@
       margin-right: -60px;
     }
 
-    #menu4 {
+    /* #menu4 {
       margin-right: -120px;
-    }
+    } */
 
     /* .ace_marker-layer .ace_selection {
       background: #053ab1 !important;
@@ -276,6 +292,27 @@
     .arrow.rotated {
       transform: rotate(180deg);
     }
+
+    .ace-vibrant-ink{
+      background: #272822 !important;
+    }
+    
+    .ace-vibrant-ink .ace_gutter{
+      background: #2F3129 !important;
+    }
+
+    .ace-vibrant-ink .ace_string{
+      color: rgb(241 133 133) !important
+    }
+
+    .ace-vibrant-ink .ace_variable{
+      color: #9d9dff !important
+    }
+
+    .ace-vibrant-ink .ace_marker-layer .ace_selection {
+      background: #053ab1 !important;
+      color:white !important;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
 </head>
@@ -308,11 +345,11 @@
       <div id="output"></div>
     </div>
     <div id="copy">Copied</div>
-    <button onclick="save()" id="menu0" title="Save">💾</button>
-    <button onclick="expandAll()" id="menu1" title="Expand all">💬</button>
-    <button onclick="copyAll()" id="menu2" title="Copy">📋</button>
-    <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button>
-    <button onclick="filterText()" id="menu4" title="Filter Axelor">✅</button>
+    <button onclick="save()" id="menu0">💾</button>
+    <button onclick="expandAll()" id="menu1">💬</button>
+    <button onclick="copyAll()" id="menu2">📋</button>
+    <button onclick="filterText()" id="menu3">✅</button>
+    <!-- <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button> -->
   </div>
 
   <script>
@@ -320,7 +357,7 @@
     let menu1 = document.getElementById("menu1");
     let menu2 = document.getElementById("menu2");
     let menu3 = document.getElementById("menu3");
-    let menu4 = document.getElementById("menu4");
+    // let menu4 = document.getElementById("menu4");
     var editor = ace.edit("editor");
     var output = ace.edit("output");
 
@@ -365,7 +402,7 @@
       }
       output.setValue(formatted, -1);
       const isVisible = !!editor.getValue();
-      [menu0, menu1, menu2, menu3, menu4].forEach(
+      [menu0, menu1, menu2, menu3].forEach(
         (menu) => (menu.style.display = isVisible ? "block" : "none")
       );
     }
@@ -468,9 +505,14 @@
     function collapseAll() {
       output.getSession().foldAll();
     }
-
+    let fold = false
     function expandAll() {
-      output.getSession().unfold();
+      fold = !fold
+      if(fold){
+        output.getSession().foldAll();
+      }else{
+        output.getSession().unfold();
+      }
     }
 
     function copyAll() {
