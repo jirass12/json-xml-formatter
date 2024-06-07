@@ -315,7 +315,6 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 </head>
 
 <body>
@@ -406,8 +405,6 @@
       [menu0, menu1, menu2, menu3].forEach(
         (menu) => (menu.style.display = isVisible ? "block" : "none")
       );
-
-      updateURLWithText(editor.getValue());
     }
 
     function formatXML(text) {
@@ -870,35 +867,8 @@
         saveSettings();
       });
     }
-    
-    function compressToEncodedURIComponent(input) {
-      return encodeURIComponent(LZString.compressToEncodedURIComponent(input));
-    }
 
-    function decompressFromEncodedURIComponent(input) {
-      return LZString.decompressFromEncodedURIComponent(decodeURIComponent(input));
-    }
-
-    function updateURLWithText(text) {
-      const encodedText = compressToEncodedURIComponent(text);
-      const url = new URL(window.location);
-      url.searchParams.set('value', encodedText);
-      window.history.replaceState({}, '', url);
-    }
-
-    function loadTextFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      const encodedText = params.get('value');
-      if (encodedText) {
-        const decodedText = decompressFromEncodedURIComponent(encodedText);
-        editor.setValue(decodedText, -1);
-      }
-    }
-    document.addEventListener("DOMContentLoaded", function() {
-      loadTextFromURL();
-      initialize();
-    });
-
+    initialize();
   </script>
 </body>
 
