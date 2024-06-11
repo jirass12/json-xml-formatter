@@ -302,6 +302,7 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
 
 <body>
@@ -327,6 +328,7 @@
       </div>
       <button onclick="space()">Remove Space</button>
       <button onclick="clearText()">Clear</button>
+      <button onclick="shareLink()">Share</button>
     </div>
     <div class="container">
       <div id="output"></div>
@@ -863,9 +865,79 @@
       output.resize();
     }
 
-    function initialize() {
+    const JSONBIN_API_KEY = '$2a$10$0SOwtiycB7C9dRn/q5r6nus6mIru68FCQD82v.ZfDhSOMb.O.9Rfm';
+    async function shareLink() {
+     const editorContent = editor.getValue();
+     const compressedContent = LZString.compressToUTF16(editorContent);
+
+      const payload = {
+        data: compressedContent,
+        ttl: 86400
+      };
+      try {
+        const response = await fetch('https://api.jsonbin.io/v3/b', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': JSONBIN_API_KEY
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        const binId = result.metadata.id;
+
+        const shareLink = `${window.location.origin}${window.location.pathname}?value=${binId}`;
+        
+        navigator.clipboard.writeText(shareLink).then(function () {
+          let c = document.getElementById("copy");
+          c.style.display = "block";
+          setTimeout(() => {
+            c.style.display = "none";
+          }, 500);
+        }, function(err) {
+          console.error('Could not copy text: ', err);
+        });
+        history.pushState({}, '', shareLink);
+      } catch (error) {
+        alert("text too long, try remove space first")
+        console.error("Error creating bin: ", error);
+      }
+    }
+
+    async function fetchAndDisplayContent(binId) {
+      
+      try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+          method: 'GET',
+          headers: {
+            'X-Master-Key': JSONBIN_API_KEY
+          }
+        });
+        if(response.status == "404") throw "404"
+
+        const result = await response.json();
+        const compressedContent = result.record.data;
+        console.log("🚀 ~ fetchAndDisplayContent ~ compressedContent:", compressedContent)
+        const content = LZString.decompressFromUTF16(compressedContent);
+        console.log("🚀 ~ fetchAndDisplayContent ~ content:", content)
+
+        editor.setValue(content, -1);
+      } catch (error) {
+        if(error == "404") alert("data not found or expired")
+        console.error("Error fetching content: ", error);
+      }
+    }
+    async function initialize() {
       loadSettings();
       renderHistory();
+
+      const urlParams = new URLSearchParams(window.location.search);
+        const binId = urlParams.get('value');
+
+      if (binId) {
+        await fetchAndDisplayContent(binId);
+      }
 
       window.addEventListener('beforeunload', (event) => {
         saveSettings();
