@@ -12,6 +12,7 @@
       background: #161616;
       color: white;
       display: flex;
+      overflow: hidden;
     }
 
     ::-webkit-scrollbar {
@@ -142,7 +143,7 @@
     .container {
       margin-top: 20px;
       width: 100%;
-      height: calc(100vh - 220px);
+      height: calc(100vh - 195px);
     }
 
     #output {
@@ -164,13 +165,18 @@
       color: black;
     }
 
-    #menu0,
-    #menu1,
-    #menu2,
-    #menu3{
-      display: none;
+    .menu-container{
       position: fixed;
-      bottom: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      bottom: 5px;
+      height: 45px;
+    }
+
+    .menu{
+      display: none;
       z-index: 99;
       font-size: 18px;
       border: none;
@@ -178,18 +184,14 @@
       background-color: #555;
       color: white;
       cursor: pointer;
-      padding: 15px;
+      padding: 10px;
       border-radius: 4px;
       transform: translateX(50%);
       width: 50px;
-      right: 50%;
     }
 
-    #menu0:hover::before,
-    #menu1:hover::before,
-    #menu2:hover::before,
-    #menu3:hover::before{
-      content: "Fold Unfold";
+    .menu:hover::before{
+      content: "";
       position: absolute;
       bottom: 100%;
       left: 50%;
@@ -203,10 +205,7 @@
       z-index: 50;
     }
 
-    #menu0:hover::after, 
-    #menu1:hover::after,
-    #menu2:hover::after,
-    #menu3:hover::after {
+    .menu:hover::after{
       content: "";
       position: absolute;
       top: 0;
@@ -218,37 +217,25 @@
       border-color: #ffffff transparent transparent transparent;
     }
 
-    #menu0:hover::before {
+    .menu:nth-child(1):hover::before {
       content: "Save";
     }
 
-    #menu2:hover::before {
+    .menu:nth-child(2):hover::before {
+      content: "Fold Unfold";
+    }
+
+    .menu:nth-child(3):hover::before {
       content: "Copy";
     }
 
-    #menu3:hover::before {
+    .menu:nth-child(4):hover::before {
       content: "Filter Axelor";
     }
 
-    /* #menu4:hover::before {
-      content: "Filter Axelor";
-    } */
-
-    #menu0 {
-      margin-right: 120px;
+    .menu:nth-child(5):hover::before {
+      content: "Fullscreen";
     }
-
-    #menu1 {
-      margin-right: 60px;
-    }
-
-    #menu3 {
-      margin-right: -60px;
-    }
-
-    /* #menu4 {
-      margin-right: -120px;
-    } */
 
     /* .ace_marker-layer .ace_selection {
       background: #053ab1 !important;
@@ -345,18 +332,18 @@
       <div id="output"></div>
     </div>
     <div id="copy">Copied</div>
-    <button onclick="save()" id="menu0">💾</button>
-    <button onclick="expandAll()" id="menu1">💬</button>
-    <button onclick="copyAll()" id="menu2">📋</button>
-    <button onclick="filterText()" id="menu3">✅</button>
     <!-- <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button> -->
+  </div>
+  <div class="menu-container">
+    <button onclick="save()" class="menu">💾</button>
+    <button onclick="expandAll()" class="menu">💬</button>
+    <button onclick="copyAll()" class="menu">📋</button>
+    <button onclick="filterText()" class="menu">✅</button>
+    <button onclick="fullScreen()" class="menu">⛶</button>
   </div>
 
   <script>
-    let menu0 = document.getElementById("menu0");
-    let menu1 = document.getElementById("menu1");
-    let menu2 = document.getElementById("menu2");
-    let menu3 = document.getElementById("menu3");
+    let menu = document.querySelectorAll(".menu");
     // let menu4 = document.getElementById("menu4");
     var editor = ace.edit("editor");
     var output = ace.edit("output");
@@ -402,7 +389,7 @@
       }
       output.setValue(formatted, -1);
       const isVisible = !!editor.getValue();
-      [menu0, menu1, menu2, menu3].forEach(
+      menu.forEach(
         (menu) => (menu.style.display = isVisible ? "block" : "none")
       );
     }
@@ -857,6 +844,23 @@
       if (JSON.stringify(currentOutputSettings) !== JSON.stringify(savedOutputSettings)) {
         localStorage.setItem('outputSettings', JSON.stringify(currentOutputSettings));
       }
+    }
+
+    let isFull = false
+    function fullScreen(){
+      isFull = !isFull
+      let c = document.querySelector(".con");
+      let t = document.querySelector(".toggle-sidebar-btn");
+      let co = document.querySelector(".container");
+      let m = document.querySelector(".main");
+      [c, t].forEach(
+        (menu) => (menu.style.display = isFull ? "none" : "")
+      );
+      co.style.marginTop = isFull ? "0" : ""
+      co.style.height = isFull ? `calc(100vh - 65px)` : ``;
+      m.style.padding = isFull ? `10px` : ``;
+      editor.resize();
+      output.resize();
     }
 
     function initialize() {
