@@ -510,7 +510,7 @@
         c.style.display = "block";
         setTimeout(() => {
           c.style.display = "none";
-        }, 500);
+        }, 700);
       });
     }
 
@@ -853,9 +853,10 @@
       isFull = !isFull
       let c = document.querySelector(".con");
       let t = document.querySelector(".toggle-sidebar-btn");
+      let s = document.querySelector(".sidebar");
       let co = document.querySelector(".container");
       let m = document.querySelector(".main");
-      [c, t].forEach(
+      [c, t, s].forEach(
         (menu) => (menu.style.display = isFull ? "none" : "")
       );
       co.style.marginTop = isFull ? "0" : ""
@@ -894,7 +895,7 @@
           c.style.display = "block";
           setTimeout(() => {
             c.style.display = "none";
-          }, 500);
+          }, 700);
         }, function(err) {
           console.error('Could not copy text: ', err);
         });
