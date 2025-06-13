@@ -130,6 +130,8 @@
       color: white;
       border: 1px solid #878787;
       line-height: 30px;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     .con button:hover {
@@ -165,7 +167,7 @@
       color: black;
     }
 
-    .menu-container{
+    .menu-container {
       position: fixed;
       display: flex;
       justify-content: center;
@@ -175,7 +177,12 @@
       height: 45px;
     }
 
-    .menu{
+    .menu-child {
+      display: flex;
+      gap: 5px;
+    }
+
+    .menu {
       display: none;
       z-index: 99;
       font-size: 18px;
@@ -190,7 +197,7 @@
       width: 50px;
     }
 
-    .menu:hover::before{
+    .menu:hover::before {
       content: "";
       position: absolute;
       bottom: 100%;
@@ -205,7 +212,7 @@
       z-index: 50;
     }
 
-    .menu:hover::after{
+    .menu:hover::after {
       content: "";
       position: absolute;
       top: 0;
@@ -222,7 +229,7 @@
     }
 
     .menu:nth-child(2):hover::before {
-      content: "Fold Unfold";
+      content: "Fold/Unfold";
     }
 
     .menu:nth-child(3):hover::before {
@@ -230,7 +237,7 @@
     }
 
     .menu:nth-child(4):hover::before {
-      content: "Filter Axelor";
+      content: "CamelCase/SnakeCase";
     }
 
     .menu:nth-child(5):hover::before {
@@ -280,25 +287,25 @@
       transform: rotate(180deg);
     }
 
-    .ace-vibrant-ink{
+    .ace-vibrant-ink {
       background: #272822 !important;
     }
-    
-    .ace-vibrant-ink .ace_gutter{
+
+    .ace-vibrant-ink .ace_gutter {
       background: #2F3129 !important;
     }
 
-    .ace-vibrant-ink .ace_string{
+    .ace-vibrant-ink .ace_string {
       color: rgb(241 133 133) !important
     }
 
-    .ace-vibrant-ink .ace_variable{
+    .ace-vibrant-ink .ace_variable {
       color: #9d9dff !important
     }
 
     .ace-vibrant-ink .ace_marker-layer .ace_selection {
       background: #053ab1 !important;
-      color:white !important;
+      color: white !important;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
@@ -326,6 +333,7 @@
           <input onclick="radChange(event)" type="radio" name="lang" value="xml" />XML
         </span>
       </div>
+
       <button onclick="space()">Remove Space</button>
       <button onclick="clearText()">Clear</button>
       <button onclick="shareLink()">Share</button>
@@ -334,14 +342,15 @@
       <div id="output"></div>
     </div>
     <div id="copy">Copied</div>
-    <!-- <button onclick="collapseAll()" id="menu3" title="Collapse all">🗨</button> -->
   </div>
   <div class="menu-container">
-    <button onclick="save()" class="menu">💾</button>
-    <button onclick="expandAll()" class="menu">💬</button>
-    <button onclick="copyAll()" class="menu">📋</button>
-    <button onclick="filterText()" class="menu">✅</button>
-    <button onclick="fullScreen()" class="menu">⛶</button>
+    <div class="menu-child">
+      <button onclick="save()" class="menu">💾</button>
+      <button onclick="expandAll()" class="menu">💬</button>
+      <button onclick="copyAll()" class="menu">📋</button>
+      <button onclick="camelSnakeCase()" class="menu">🔄</button>
+      <button onclick="fullScreen()" class="menu">⛶</button>
+    </div>
   </div>
 
   <script>
@@ -491,15 +500,12 @@
       editor.setValue("");
     }
 
-    function collapseAll() {
-      output.getSession().foldAll();
-    }
     let fold = false
     function expandAll() {
       fold = !fold
-      if(fold){
+      if (fold) {
         output.getSession().foldAll();
-      }else{
+      } else {
         output.getSession().unfold();
       }
     }
@@ -514,145 +520,189 @@
       });
     }
 
-    function filterText() {
-      const filterWords = ["nn-be-service", "request-params", "request-body"];
-      const input = output.getValue();
-      const filteredContent = filterLogs(input, filterWords);
+    const snakeToCamel = (str) => {
+      return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+    };
 
-      let f = formatJSON(filteredContent);
-      output.setValue(f, -1);
-    }
+    const camelToSnake = (str) => {
+      return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    };
 
-    function filterLogs(input, filterWords) {
-      let filteredLines = [];
-      let braceLevel = 0;
-      let startIndex = findNextWordIndex(input, filterWords, 0);
-      let ss = []
-      ss.push(startIndex);
-      let count = 0
-      let lastIp = ""
-      while (startIndex !== -1) {
-        let endIndex = input.indexOf("}", startIndex);
-        while (endIndex !== -1) {
-          count++
-          braceLevel = 0;
-          for (let i = startIndex; i <= endIndex; i++) {
-            if (input[i] === "{") braceLevel++;
-            if (input[i] === "}") braceLevel--;
-            if (braceLevel === 0 && input[i] === "}") {
-              let ip = input.slice(startIndex, i + 1);
-              let q = false;
-              if (ip.includes("BE Send Mongo Query:")) {
-                ip = input.slice(startIndex, i + 200);
-                let queryIndex = ip.indexOf("BE Send Mongo Query:") + "BE Send Mongo Query:".length;
-                let firstQuoteIndex = ip.indexOf('"', queryIndex);
-                if (ip[firstQuoteIndex - 4] == "{") {
-                  ip = input.slice(startIndex, i + 1)
-                } else {
-                  let lastQuoteIndex = findLastQuoteIndex(ip, firstQuoteIndex);
-                  if (firstQuoteIndex !== -1 && lastQuoteIndex !== -1) {
-                    ip = ip.slice(0, queryIndex) + " {" + ip.slice(queryIndex, firstQuoteIndex + 1) + ip.slice(firstQuoteIndex + 1, lastQuoteIndex + 1) + " }";
-                  }
-                }
-                q = true;
-              }
-              if (ip.includes("nn-be-service")) {
-                if (input[startIndex - 2] == '"') {
-                  ip = q ? input.slice(input.indexOf(ip) - 24, i + 1) : input.slice(startIndex - 24, i + 1)
-                } else {
-                  let d = 1
-                  let e = 1
-                  let tt = ""
-                  while (e <= 31) {
-                    if (!(/\s/.test(input[startIndex - d]))) {
-                      tt += input[startIndex - d]
-                      e++
-                    }
-                    d++
-                  }
-                  tt = tt.split("").reverse().join("")
-                  let t = tt.slice(1, 24).trim();
-                  t = new Date(t)
-                  t = t == "Invalid Date" ? "" : '"[' + t.getDate().toString().padStart(2, '0') + '/' +
-                    (t.getMonth() + 1).toString().padStart(2, '0') + '/' +
-                    t.getFullYear() + ' ' +
-                    t.getHours().toString().padStart(2, '0') + ':' +
-                    t.getMinutes().toString().padStart(2, '0') + ':' +
-                    t.getSeconds().toString().padStart(2, '0') + ']" ';
-                  ip = q ? t + ip : t + input.slice(startIndex, i + 1);
-                }
-              }
-              lastIp = ip
-              filteredLines.push(ip);
-              break;
+    const convertKeys = (data, converter) => {
+      try {
+        if (Array.isArray(data)) {
+          return data.map(item => convertKeys(item, converter));
+        }
+
+        if (data && typeof data === 'object' && data.constructor === Object) {
+          const newObj = {};
+          for (const key in data) {
+            if (key === "_id") {
+              newObj[key] = data[key];
+              continue;
+            }
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+              const newKey = converter(key);
+              newObj[newKey] = convertKeys(data[key], converter);
             }
           }
-          if (braceLevel === 0) break;
-          endIndex = input.indexOf("}", endIndex + 1);
-          if (count >= 10000) break
+          return newObj;
         }
-        startIndex = findNextWordIndex(input, filterWords, endIndex);
-
-        if (ss.indexOf(startIndex) >= 0) break
+        return data
+      } catch (e) {
+        return data;
       }
+    };
 
-      return filteredLines.join("\n");
-    }
+    let isCamelCase = true;
+    function camelSnakeCase() {
+      let text = output.getValue();
+      let result = "";
+      try {
+        text = JSON.parse(text);
 
-    function findLastQuoteIndex(input, start) {
-      let lastQuoteIndex = -1;
-
-      for (let i = start + 1; i < input.length; i++) {
-        if (input[i] === '"' && input[i - 1] !== '\\') {
-          lastQuoteIndex = i;
-          break
+        if (isCamelCase) {
+          result = convertKeys(text, camelToSnake);
+        } else {
+          result = convertKeys(text, snakeToCamel);
         }
+        result = formatJSON(JSON.stringify(result))
+        isCamelCase = !isCamelCase;
+        output.setValue(result, -1);
+      } catch (error) {
+        alert("Invalid JSON");
       }
-      return lastQuoteIndex;
     }
 
-    function findNextWordIndex(input, words, start) {
-      let minIndex = -1;
-      for (let word of words) {
-        let index = input.indexOf(word, start);
-        if (index !== -1 && (minIndex === -1 || index < minIndex)) {
-          minIndex = index;
-        }
-      }
 
-      return minIndex;
-    }
+    const DB_NAME = 'myDatabase';
+    const DB_VERSION = 2;
+    const STORE_NAME = 'history';
 
-    function save() {
-      let o = output.getValue();
-      let n
+    function openDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-        = prompt("Save name")
-      if (n === null) {
-        return
-      }
-      let his = JSON.parse(localStorage.getItem('history')) || [];
-      let selected = document.querySelector('input[name="lang"]:checked');
-      his.push({ n: n || "Untitled", v: o, t: selected.value })
-      localStorage.setItem('history', JSON.stringify(his));
-      renderHistory();
-    }
+        request.onerror = (event) => {
+          reject('IndexedDB error: ' + event.target.errorCode);
+        };
 
-    function renderHistory() {
-      const historyList = document.getElementById('historyList');
-      const history = JSON.parse(localStorage.getItem('history')) || [];
-      historyList.innerHTML = '';
+        request.onsuccess = (event) => {
+          resolve(event.target.result);
+        };
 
-      history.reverse().forEach((item, index) => {
-        const historyItem = document.createElement('div');
-        historyItem.classList.add('history-item');
-        historyItem.innerHTML = `
-          <span>${item.n}</span>
-          <button class="delete-btn" onclick="deleteHistory(event, ${history.length - 1 - index})">🗑</button>
-        `;
-        historyItem.onclick = () => loadHistory(item.v, item.t);
-        historyList.appendChild(historyItem);
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+
+          if (db.objectStoreNames.contains(STORE_NAME)) {
+            db.deleteObjectStore(STORE_NAME);
+          }
+
+          db.createObjectStore(STORE_NAME, { autoIncrement: true });
+        };
       });
+    }
+
+    async function save() {
+      let o = output.getValue();
+      let n = prompt("Save name");
+      if (n === null) {
+        return;
+      }
+
+      const db = await openDb();
+
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        let selected = document.querySelector('input[name="lang"]:checked');
+        const data = { n: n || "Untitled", v: o, t: selected.value };
+        const request = store.put(data);
+
+        let newRecordId;
+
+        request.onsuccess = (event) => {
+          newRecordId = event.target.result;
+        };
+
+        transaction.oncomplete = () => {
+          renderHistory()
+          resolve(newRecordId);
+        };
+
+        transaction.onerror = (event) => {
+          reject('Error saving data: ' + event.target.error);
+        };
+      });
+    }
+
+    async function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      const db = await openDb();
+
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.openCursor(null, 'prev');
+
+        historyList.innerHTML = '';
+
+        request.onsuccess = event => {
+          const cursor = event.target.result;
+          if (cursor) {
+            const itemKey = cursor.key;
+            const itemValue = cursor.value;
+
+            const historyItem = document.createElement('div');
+            historyItem.classList.add('history-item');
+            historyItem.setAttribute('data-key', itemKey);
+
+            historyItem.innerHTML = `
+          <span class="history-item-name">${itemValue.n}</span>
+          <button class="delete-btn" onclick="deleteHistory(event, ${itemKey})">🗑</button>
+        `;
+
+            const nameSpan = historyItem.querySelector('.history-item-name');
+            nameSpan.onclick = () => loadHistory(itemValue.v, itemValue.t);
+
+            historyList.appendChild(historyItem);
+
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+
+        request.onerror = event => {
+          reject('Error fetching data with cursor: ' + event.target.error);
+        };
+      });
+    }
+
+    async function deleteHistory(event, key) {
+      event.stopPropagation();
+
+      const db = await openDb();
+
+      const promise = new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+
+        const deleteRequest = store.delete(key);
+
+        transaction.oncomplete = () => {
+          console.log('Data deleted successfully.');
+          resolve();
+        };
+
+        transaction.onerror = (event) => {
+          console.error('Error deleting data:', event.target.error);
+          reject('Error deleting data: ' + event.target.error);
+        };
+      });
+
+      await promise;
+      await renderHistory();
     }
 
     function loadHistory(value, type) {
@@ -669,14 +719,6 @@
       editor.resize();
       output.resize();
       format();
-    }
-
-    function deleteHistory(event, index) {
-      event.stopPropagation();
-      let his = JSON.parse(localStorage.getItem('history')) || [];
-      his.splice(index, 1);
-      localStorage.setItem('history', JSON.stringify(his));
-      renderHistory();
     }
 
     function toggleSidebar() {
@@ -849,7 +891,7 @@
     }
 
     let isFull = false
-    function fullScreen(){
+    function fullScreen() {
       isFull = !isFull
       let c = document.querySelector(".con");
       let t = document.querySelector(".toggle-sidebar-btn");
@@ -868,8 +910,8 @@
 
     const JSONBIN_API_KEY = '$2a$10$0SOwtiycB7C9dRn/q5r6nus6mIru68FCQD82v.ZfDhSOMb.O.9Rfm';
     async function shareLink() {
-     const editorContent = editor.getValue();
-     const compressedContent = LZString.compressToUTF16(editorContent);
+      const editorContent = editor.getValue();
+      const compressedContent = LZString.compressToUTF16(editorContent);
 
       const payload = {
         data: compressedContent,
@@ -889,14 +931,14 @@
         const binId = result.metadata.id;
 
         const shareLink = `${window.location.origin}${window.location.pathname}?value=${binId}`;
-        
+
         navigator.clipboard.writeText(shareLink).then(function () {
           let c = document.getElementById("copy");
           c.style.display = "block";
           setTimeout(() => {
             c.style.display = "none";
           }, 700);
-        }, function(err) {
+        }, function (err) {
           console.error('Could not copy text: ', err);
         });
         history.pushState({}, '', shareLink);
@@ -907,7 +949,7 @@
     }
 
     async function fetchAndDisplayContent(binId) {
-      
+
       try {
         const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
           method: 'GET',
@@ -915,7 +957,7 @@
             'X-Master-Key': JSONBIN_API_KEY
           }
         });
-        if(response.status == "404") throw "404"
+        if (response.status == "404") throw "404"
 
         const result = await response.json();
         const compressedContent = result.record.data;
@@ -925,7 +967,7 @@
 
         editor.setValue(content, -1);
       } catch (error) {
-        if(error == "404") alert("data not found or expired")
+        if (error == "404") alert("data not found or expired")
         console.error("Error fetching content: ", error);
       }
     }
@@ -934,7 +976,7 @@
       renderHistory();
 
       const urlParams = new URLSearchParams(window.location.search);
-        const binId = urlParams.get('value');
+      const binId = urlParams.get('value');
 
       if (binId) {
         await fetchAndDisplayContent(binId);

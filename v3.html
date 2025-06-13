@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Encode/Decode</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #161616;
+      color: white;
+      display: flex;
+      overflow: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1e1e1e;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #888;
+    }
+
+    .container {
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .main {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    #encode,
+    #decode {
+      width: 100%;
+      flex: 5;
+      height: calc(90vh - 50px);
+      min-width: 200px;
+    }
+
+    #option {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      width: 100px;
+    }
+
+    .title {
+      height: 30px;
+      position: relative;
+    }
+
+    #encode-title {
+      color: #00ff00;
+      position: absolute;
+      top: 15px;
+      color: #ff0000;
+      left: 20px;
+    }
+
+    #decode-title {
+      color: #ff0000;
+      position: absolute;
+      top: 15px;
+      color: #00ff00;
+      left: calc(50% + 100px);
+    }
+
+    button {
+      font-size: 20px;
+      background: #45474a;
+      color: white;
+      border: 1px solid #878787;
+      border-radius: 5px;
+      line-height: 1px;
+      height: 50px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #414346;
+    }
+
+    button:active {
+      background: #45474a;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="title">
+      <span id="encode-title">Encoded</span>
+      <span id="decode-title">Decoded</span>
+    </div>
+    <div class="main">
+      <div id="encode"></div>
+      <div id="option">
+        <span>Select Mode</span>
+        <span>
+          <input onclick="setMode('url')" type="radio" name="lang" value="json" checked /> URL
+        </span>
+        <span>
+          <input onclick="setMode('base64')" type="radio" name="lang" value="xml" /> Base64
+        </span>
+        <button onclick="clearText()">Clear</button>
+      </div>
+      <div id="decode"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const mainContainer = document.querySelector(".main");
+      const encodeEditor = ace.edit("encode");
+      const decodeEditor = ace.edit("decode");
+      const titleContainer = document.querySelector(".title");
+
+      let state = {
+        mode: "url",
+        silent: false,
+      };
+
+      const conversion = {
+        url: {
+          encode: (text) => encodeURIComponent(text),
+          decode: (text) => decodeURIComponent(text),
+        },
+        base64: {
+          encode: (text) => btoa(text),
+          decode: (text) => atob(text),
+        },
+      };
+
+      function initEditor(editor) {
+        editor.setTheme("ace/theme/monokai");
+        editor.setShowPrintMargin(false);
+        editor.session.setUseWorker(false);
+        editor.session.setUseWrapMode(true);
+        editor.session.setMode("ace/mode/text");
+        editor.setOptions({ showLineNumbers: true, showGutter: true });
+      }
+
+      [encodeEditor, decodeEditor].forEach(initEditor);
+
+      function convert(sourceEditor, destinationEditor) {
+        if (state.silent) return;
+
+        state.silent = true;
+        const text = sourceEditor.getValue();
+        let result = "";
+
+        try {
+          if (sourceEditor === encodeEditor) {
+            result = conversion[state.mode].decode(text);
+          } else {
+            result = conversion[state.mode].encode(text);
+          }
+        } catch (e) {
+          console.error("Conversion error:", e);
+          result = "Invalid input for selected mode";
+        }
+
+        destinationEditor.setValue(result, -1);
+        state.silent = false;
+      }
+
+      window.clearText = function () {
+        encodeEditor.setValue("", -1);
+        decodeEditor.setValue("", -1);
+      }
+
+      encodeEditor.on("change", () => convert(encodeEditor, decodeEditor));
+      decodeEditor.on("change", () => convert(decodeEditor, encodeEditor));
+
+      window.setMode = function (newMode) {
+        state.mode = newMode;
+        convert(encodeEditor, decodeEditor);
+      };
+    });
+  </script>
+</body>
+
+</html>
