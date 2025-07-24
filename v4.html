@@ -651,11 +651,11 @@
 
   <!-- Floating Action Menu -->
   <div class="floating-menu">
-    <button class="floating-btn tooltip" onclick="save()" data-tooltip="Save (Ctrl+S)">💾</button>
-    <button class="floating-btn tooltip" onclick="expandAll()" data-tooltip="Fold/Unfold all (Ctrl+F)">📁</button>
-    <button class="floating-btn tooltip" onclick="copyAll()" data-tooltip="Copy all (Ctrl+C)">📋</button>
-    <button class="floating-btn tooltip" onclick="camelSnakeCase()" data-tooltip="Toggle camelCase/snake_case (Ctrl+E)">🔄</button>
-    <button class="floating-btn tooltip" onclick="fixJSON()" data-tooltip="Fix JSON syntax (Ctrl+Q)">🔧</button>
+    <button class="floating-btn tooltip" onclick="save()" data-tooltip="Save">💾</button>
+    <button class="floating-btn tooltip" onclick="expandAll()" data-tooltip="Fold/Unfold all">📁</button>
+    <button class="floating-btn tooltip" onclick="copyAll()" data-tooltip="Copy all">📋</button>
+    <button class="floating-btn tooltip" onclick="camelSnakeCase()" data-tooltip="Toggle camelCase/snake_case">🔄</button>
+    <button class="floating-btn tooltip" onclick="fixJSON()" data-tooltip="Fix JSON syntax">🔧</button>
     <button class="floating-btn tooltip" onclick="fullScreen()" data-tooltip="Fullscreen (F11)">⛶</button>
   </div>
 
@@ -741,7 +741,6 @@
 
       updateStatusBar();
       setupDragAndDrop();
-      setupKeyboardShortcuts();
       initialize();
     });
 
@@ -1618,46 +1617,6 @@
       }, 1000);
     }
 
-    function setupKeyboardShortcuts() {
-      document.addEventListener('keydown', function (e) {
-        if (e.ctrlKey || e.metaKey) {
-          switch (e.key) {
-            case 's':
-              e.preventDefault();
-              save();
-              break;
-            case 'c':
-              if (e.target !== editor.getDomNode() && e.target !== output.getDomNode()) {
-                e.preventDefault();
-                copyAll();
-              }
-              break;
-            case 'f':
-              if (e.target !== editor.getDomNode() && e.target !== output.getDomNode()) {
-                e.preventDefault();
-                expandAll();
-              }
-              break;
-            case 'r':
-              e.preventDefault();
-              fixJSON();
-              break;
-            case 'e':
-              e.preventDefault();
-              camelSnakeCase();
-              break;
-            case 'Delete':
-              e.preventDefault();
-              clearText();
-              break;
-
-          }
-        } else if (e.key === 'F11') {
-          e.preventDefault();
-          fullScreen();
-        }
-      });
-    }
 
     function updateStatusBar() {
       const content = output.getValue();
