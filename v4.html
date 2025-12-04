@@ -578,6 +578,135 @@
     .status-indicator.error {
       background: #ef4444;
     }
+
+    .share-qr-container {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .share-qr-container button {
+      flex: 1;
+    }
+
+    .share-qr-container button:only-child {
+      flex: 1;
+    }
+
+    .qr-modal {
+      display: none;
+      position: fixed;
+      z-index: 100000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .qr-modal.show {
+      display: flex;
+    }
+
+    .qr-modal-content {
+      background: rgba(30, 30, 30, 0.95);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .qr-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .qr-modal-header h3 {
+      margin: 0;
+      color: #f1f5f9;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .qr-modal-close {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .qr-modal-close:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.1);
+    }
+
+    .qr-modal-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #qrCanvas {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      max-width: 100%;
+    }
+
+    .qr-link-text {
+      color: #94a3b8;
+      font-size: 12px;
+      word-break: break-all;
+      text-align: center;
+      margin: 0;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      max-width: 100%;
+    }
   </style>
 </head>
 
@@ -619,7 +748,10 @@
         </div>
         <button onclick="space()" data-tooltip="Remove unnecessary spaces">Remove Space</button>
         <button onclick="clearText()" data-tooltip="Clear all content">Clear</button>
-        <button onclick="shareLink()" data-tooltip="Generate shareable link">Share</button>
+        <div class="share-qr-container">
+          <button id="shareBtn" onclick="shareLink()" data-tooltip="Generate shareable link">Share</button>
+          <button id="qrBtn" onclick="showQRCode()" data-tooltip="Show QR code" style="display: none;">QR</button>
+        </div>
       </div>
     </div>
 
@@ -665,9 +797,24 @@
     <span id="toastMessage">Action completed</span>
   </div>
 
+  <!-- QR Code Modal -->
+  <div class="qr-modal" id="qrModal">
+    <div class="qr-modal-content">
+      <div class="qr-modal-header">
+        <h3>QR Code</h3>
+        <button class="qr-modal-close" onclick="closeQRModal()">&times;</button>
+      </div>
+      <div class="qr-modal-body">
+        <canvas id="qrCanvas"></canvas>
+        <p class="qr-link-text" id="qrLinkText"></p>
+      </div>
+    </div>
+  </div>
+
   <!-- Monaco Editor -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.41.0/min/vs/loader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     let editor, output;
@@ -1514,7 +1661,7 @@
       const editorContainer = document.querySelector(".editor-container");
 
       if (isFull) {
-        [controls, sidebar].forEach(el => {
+        [controls].forEach(el => {
           if (el) el.style.display = "none";
         });
 
@@ -1665,6 +1812,7 @@
           showToast('Failed to copy share link', 'error');
         });
         history.pushState({}, '', shareLink);
+        checkAndShowQRButton();
       } catch (error) {
         showToast('Content too long, try removing spaces first', 'error');
       }
@@ -1695,6 +1843,105 @@
       }
     }
 
+    function showQRCode() {
+      const currentUrl = window.location.href;
+      const qrModal = document.getElementById('qrModal');
+      const qrCanvas = document.getElementById('qrCanvas');
+      const qrLinkText = document.getElementById('qrLinkText');
+
+      if (typeof QRCode === 'undefined') {
+        showToast('QR code library is loading, please try again', 'error');
+        return;
+      }
+
+      qrModal.classList.add('show');
+      qrLinkText.textContent = currentUrl;
+
+      // Clear previous QR code
+      const ctx = qrCanvas.getContext('2d');
+      ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
+
+      try {
+        // Create a temporary div for QRCode generation
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        document.body.appendChild(tempDiv);
+
+        // Generate QR code
+        const qr = new QRCode(tempDiv, {
+          text: currentUrl,
+          width: 300,
+          height: 300,
+          colorDark: '#000000',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Wait for QR code to be generated, then copy to canvas
+        setTimeout(() => {
+          const img = tempDiv.querySelector('img');
+          if (img) {
+            qrCanvas.width = 300;
+            qrCanvas.height = 300;
+            const canvasCtx = qrCanvas.getContext('2d');
+            if (img.complete) {
+              canvasCtx.drawImage(img, 0, 0);
+              document.body.removeChild(tempDiv);
+            } else {
+              img.onload = function () {
+                canvasCtx.drawImage(img, 0, 0);
+                document.body.removeChild(tempDiv);
+              };
+            }
+          } else {
+            document.body.removeChild(tempDiv);
+            showToast('Failed to generate QR code', 'error');
+          }
+        }, 100);
+      } catch (error) {
+        showToast('Failed to generate QR code', 'error');
+        console.error('QR Code error:', error);
+      }
+    }
+
+    function closeQRModal() {
+      const qrModal = document.getElementById('qrModal');
+      qrModal.classList.remove('show');
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function (event) {
+      const qrModal = document.getElementById('qrModal');
+      const qrModalContent = document.querySelector('.qr-modal-content');
+      if (event.target === qrModal && qrModal.classList.contains('show')) {
+        closeQRModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        const qrModal = document.getElementById('qrModal');
+        if (qrModal.classList.contains('show')) {
+          closeQRModal();
+        }
+      }
+    });
+
+    function checkAndShowQRButton() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const binId = urlParams.get('value');
+      const qrBtn = document.getElementById('qrBtn');
+      const shareBtn = document.getElementById('shareBtn');
+
+      if (binId) {
+        qrBtn.style.display = 'block';
+      } else {
+        qrBtn.style.display = 'none';
+      }
+    }
+
     async function initialize() {
       renderHistory();
 
@@ -1704,6 +1951,8 @@
       if (binId) {
         await fetchAndDisplayContent(binId);
       }
+
+      checkAndShowQRButton();
 
       const statusIndicator = document.getElementById('statusIndicator');
       const statusText = document.getElementById('statusText');
